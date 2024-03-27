@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="../static/room.css" rel="stylesheet">
+</head>
+<body>
+    <div class="flex flex-col h-[480px] border rounded-lg">
+        <div class="flex items-center justify-between p-4 border-b dark:border-gray-800">
+            <div class="flex items-center space-x-4">
+                <div class="font-bold">Support</div> <!-- 채팅방 이름 넣을 것 -->
+            </div>
+        </div>
+        <div class="flex-1 p-4 grid gap-4">
+            <div class="flex items-start space-x-2">
+                <span class="relative flex shrink-0 overflow-hidden rounded-full w-8 h-8">
+                    <div class="chatOwner">Support</div>
+                </span>
+                <div class="bg-gray-100 dark:bg-gray-800 rounded-xl p-4">
+                    Hi! How can I help you today?
+                    <div class="text-xs text-gray-500 dark:text-gray-400">2 mins ago</div>
+                </div>
+            </div>
+            <div class="flex items-start space-x-2">
+                <span class="relative flex shrink-0 overflow-hidden rounded-full w-8 h-8">
+                    <div class="chatOwner">You</div>
+                </span>
+                <div class="bg-gray-100 dark:bg-gray-800 rounded-xl p-4">
+                    Our app is crashing when we try to load the homepage.
+                    <div class="text-xs text-gray-500 dark:text-gray-400">1 min ago</div>
+                </div>
+            </div>
+        </div>
+        <div class="border-t flex p-2 gap-2">
+            <div class="flex-1">
+                <input class="
+                    flex h-10 w-full border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent
+                    file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2
+                    focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-full border-0
+                " placeholder="Type a message" />
+            </div>
+            <button class="
+                inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background
+                transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+                disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 w-10
+            ">
+                <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="h-4 w-4"
+                >
+                    <path d="m22 2-7 20-4-9-9-4Z"></path>
+                    <path d="M22 2 11 13"></path>
+                </svg>
+                <span class="sr-only">Send</span>
+            </button>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js">
+        const getChat = async (roomName) => {
+            const chat = await axios({
+                url: `localhost:8080/room/chatting/{roomName}`,
+                method: "GET",
+
+            });
+            return JSON.parse(chat.data);
+        }
+
+        const sendChat = async () => {
+
+        }
+
+        const disconnect = async (roomName) => {
+
+        }
+    </script>
+</body>
+</html>
