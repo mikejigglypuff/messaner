@@ -42,7 +42,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     public boolean createChannel(UserDTO userDTO) {
         try {
             List<User> users = ac.getBean("userList", List.class);
-            List<Chat> chats = ac.getBean("chatList", List.class)
+            List<Chat> chats = ac.getBean("chatList", List.class);
             users.add(new User(userDTO, chats));
             template.insert(new Room(userDTO, users, chats));
 

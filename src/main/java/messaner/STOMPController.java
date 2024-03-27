@@ -76,12 +76,14 @@ public class STOMPController {
     }
 
     @PostMapping("/createChannel")
-    public String createChannel(@Payload UserDTO userDTO) {
+    public String createChannel(@CookieValue("userId") Optional<String> cookie, @Payload RoomDTO roomDTO) {
         //전송받을 메시지 DTO를 정의하고 매개변수로 받기
         //새 채널 생성 및 초기화 후 DB상에 등록하기
-        String uuid = "room" + UUID.randomUUID();
-        if(repositoryService.createChannel(userDTO)) {
-            return "/chatting/" + userDTO.getRoom();
+        if(cookie.isPresent()) {
+            UserDTO userDTO = new UserDTO(roomDTO.getRoom(), cookie.get());
+            if (repositoryService.createChannel(userDTO)) {
+                return "/chatting/" + userDTO.getRoom();
+            }
         }
         return "/";
     }
