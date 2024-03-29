@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -41,8 +42,8 @@ public class RepositoryServiceImpl implements RepositoryService {
     @Override
     public boolean createChannel(UserDTO userDTO) {
         try {
-            List<User> users = ac.getBean("userList", List.class);
-            List<Chat> chats = ac.getBean("chatList", List.class);
+            List<User> users = new ArrayList<>();
+            List<Chat> chats = new ArrayList<>();
             users.add(new User(userDTO, chats));
             template.insert(new Room(userDTO, users, chats));
 
@@ -57,7 +58,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     public boolean addSubscription(UserDTO userDTO) {
         try {
             Room room = this.getRoom(userDTO);
-            room.getSubscribers().add(new User(userDTO, ac.getBean("chatList", List.class)));
+            room.getSubscribers().add(new User(userDTO, new ArrayList<>()));
             Query query = new Query(Criteria.where("name").is(userDTO.getRoom()));
             Update update = new Update().set("subscribers", room.getSubscribers());
             template.updateFirst(query, update, Room.class);
@@ -99,7 +100,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Override
-    public List<Room> getRooms(RoomDTO roomDTO) {
+    public List<Room> getRooms(RoomDTO roomDTO) throws NoSuchElementException {
         Query query = new Query(Criteria.where("name").regex(roomDTO.getRoom(), null));
         List<Room> curRoom = template.find(query, Room.class);
 

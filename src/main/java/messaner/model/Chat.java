@@ -7,6 +7,7 @@ import messaner.DTO.ChatDTO;
 
 import java.util.Date;
 
+
 @RequiredArgsConstructor
 @Getter
 public class Chat {
