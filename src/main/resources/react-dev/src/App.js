@@ -4,7 +4,10 @@ import React, { useState, useEffect } from "react";
 import "./index.css";
 import SockJS from "sockjs-client";
 import axios from "axios";
-import { Stomp } from "@stomp/stompjs";
+import { Client } from "@stomp/stompjs";
+
+const defaultURL = process.env.REACT_APP_DEFAULT_URL;
+const stompURL = process.env.REACT_APP_STOMP_URL;
 
 function App() {
     const [roomList, setRoomList] = useState([]);
@@ -19,33 +22,43 @@ function App() {
         } else {
             getChat();
         }
-    }, [], [client]);
+    }, []);
+
+    useEffect(() => {
+        if(!client) {
+            getRooms();
+        } else {
+            getChat();
+        }
+    }, [client]);
 
     const connect = (url) => {
-        const socket = new SockJS(url);
-        setClient(Stomp.Client({
-            brokerUrl: `${process.env.DEFAULT_URL}/main/room/${url}`,
-            onConnect: () => {
-                client.subscribe(`/topic/${url}`, res => {
-                    console.log("접속 완료");
+        if(!client) {
+            const newClient = new Client({
+                webSocketFactory: () => { return new SockJS(`http://${defaultURL}/ws`) },
+                onConnect: () => {
+                    newClient.subscribe(`/topic/chat${url}`, res => {
+                        console.log("접속 완료");
 
-                }); //a에 구독
-            },
-            reconnectDelay: 5000,
-            heartbeat: {
-                incoming: 10000,
-                outgoing: 10000
-            },
+                    }); //a에 구독
+                },
+                reconnectDelay: 5000,
+                heartbeat: {
+                    incoming: 10000,
+                    outgoing: 10000
+                },
 
-        }));
+            });
 
-        client.activate();
+            newClient.activate();
+            setClient(newClient);
+        }
     }
 
     const sendChat = async () => {
         if(client && message) {
             client.publish({
-                destination: `${process.env.DEFAULT_URL}/app/chat`,
+                destination: "/pub/chat/", 
                 body: JSON.stringify({
                     room: roomName,
                     chat: message
@@ -61,7 +74,7 @@ function App() {
             client.deactivate();
             setChatting([]);
             setMessage("");
-            setRoomName("");
+            setRoomName("/");
             setClient(null);
         }
     }
@@ -69,7 +82,7 @@ function App() {
     const getCookie = async () => {
         await axios({
             method: "get",
-            url: `${process.env.DEFAULT_URL}/`,
+            url: `/connect`,
             withCredentials: true,
         });
 
@@ -77,16 +90,17 @@ function App() {
     }
 
     const getRooms = async () => {
-        const url = (roomName) ? roomName : "";
-        const rooms = await axios.get(`${process.env.DEFAULT_URL}/rooms/${url}`);
-        setRoomList(JSON.parse(rooms.data));
+        const url = (roomName) ? `?name=${roomName}` : "";
+        const rooms = await axios.get(`/rooms${url}`);
+        setRoomList(rooms.data);
+        console.log(roomList);
     }
 
     const createChannel = async () => {
         if(roomName) {
             const callbackUrl = await axios({
                 method: "post",
-                url: `${process.env.DEFAULT_URL}/createChannel`,
+                url: `/room/create`,
                 withCredentials: true,
                 body: {
                     room: roomName
@@ -105,85 +119,70 @@ function App() {
         if(roomName && client) {
             const chat = await axios({
                 method: "get",
-                url: `${process.env.DEFAULT_URL}/room/chatting/${roomName}`,
+                url: `/room/chatting${roomName}`,
             });
-            setChatting(JSON.parse(chat.data));
+            setChatting(chat.data);
         }
     }
 
     const typeMessage = e => {
         setMessage(e.target.value);
-        console.log(e.target.value);
     }
 
     const typeRoomName = e => {
         setRoomName(e.target.value);
-        console.log(e.target.value);
     }
 
+
     return (client) ? chatting.map(chat => {
-            <div className="flex flex-col h-[480px] border rounded-lg">
-                <div className="flex items-center justify-between p-4 border-b dark:border-gray-800">
-                    <button variant="outline">
-                        <ArrowLeftIcon className="h-6 w-6" onClick={disconnect()} />
-                    </button>
-                    <div className="flex items-center space-x-4">
-                        <div className="font-bold">chat.room</div>
-                    </div>
+        <div className="chatRoom">
+            <div className="chatRoomHeader">
+                <button variant="outline">
+                    <ArrowLeftIcon onClick={disconnect} />
+                </button>
+                <div className="chatRoomName">chat.room</div>
+            </div>
+            <div className="chatRoomBody">
+                <div className="chatInfo">
+                    <div>JW</div>
+                    <div className="chatWriter">chat.writer</div>
                 </div>
-                <div className="flex-1 p-4 grid gap-4">
-                    <div className="flex items-start space-x-2">
-                        <div className="w-8 h-8">
-                            <div alt="Jenny Wilson" src="/placeholder-user.jpg" />
-                            <div>JW</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">chat.writer</div>
+                <div className="chatBubble">
+                    <div className="chatMessage">chat.message</div>
+                    <div className="chatCreatedAt">chat.createdAt</div>
+                </div>
+            </div>
+            <div className="chatRoomFooter">
+                <input className="msagInput" placeholder="Type a message" onChange={typeMessage} />
+                <button size="icon" onClick={sendChat}>
+                    <SendIcon />
+                    <span className="msgSendButton">Send</span>
+                </button>
+            </div>
+        </div>
+            }) : <div className="mainPage">
+                    <div className="mainHeader">
+                        <div className="mainTitle">Chat Rooms</div>
+                        <div className="searchRoom">
+                            <input placeholder="채널명을 입력하세요" onChange={typeRoomName} />
+                            <button id="searchRoomBtn" onClick={getRooms}>Search</button>
+                            <button id="createRoomBtn" onClick={createChannel}>채널 생성</button>
                         </div>
-                        <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-4">
-                            Hi! How can I help you today?
-                            <div className="text-xs text-gray-500 dark:text-gray-400">chat.createdAt</div>
-                        </div>
                     </div>
-                </div>
-                <div className="border-t flex p-2 gap-2">
-                    <div className="flex-1">
-                        <input className="rounded-full border-0" placeholder="Type a message" onChange={typeMessage} />
+                    <div className="roomList">
+                        { Object.values(roomList).map(val => (
+                            <label onClick={() => connect(`/${val.name}`)}>
+                                <div className="roomInfo" key={val.name}>
+                                    <div className="roomName">val.name</div>
+                                    <div className="roomMember">
+                                        <UserIcon />
+                                        <span className="roomMemberNum">val.subscribers.length</span>
+                                    </div>
+                                </div>
+                            </label>
+                        )) } 
                     </div>
-                    <button size="icon" onClick={sendChat()}>
-                        <SendIcon className="h-4 w-4" />
-                         <span className="sr-only">Send</span>
-                    </button>
-                </div>
-            </div>
-        }) :
-        <div className="flex flex-col w-full min-h-0">
-            <div className="flex items-center gap-5 min-w-0 w-full">
-                <div className="flex-1 min-w-0">
-                    <div>Chat Rooms</div>
-                </div>
-                <div className="w-[300px] flex items-center">
-                    <input placeholder="Search rooms" onChange={typeRoomName} />
-                    <button onClick={getRooms()}>Search</button>
-                    <button onClick={createChannel}>채널</button>
-                </div>
-            </div>
-            <div className="flex-1 min-h-0 mt-4">
-                <div className="rounded-0">
-                    { roomList && roomList.map(r => {
-                        <label onClick={connect(r.name)}>
-                            <div className="flex items-center gap-4 py-3">
-                                <div className="flex-1 min-w-0">
-                                    <div className="text-base font-medium leading-6">r.name</div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <UserIcon className="w-4 h-4" />
-                                    <span className="text-sm">r.subscribers.length</span>
-                                </div>
-                            </div>
-                        </label>
-                    }) } 
-                </div>
-            </div>
-        </div>;
+                </div>;
 }
 
 function UserIcon(props) {

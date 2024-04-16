@@ -16,9 +16,9 @@ public class Chat {
     private String message;
     private Date createdAt;
 
-    public Chat(ChatDTO chatDTO) {
+    public Chat(ChatDTO chatDTO, String user) {
         room = chatDTO.getRoom();
-        writer = chatDTO.getUser();
+        writer = user;
         message = chatDTO.getChat();
         createdAt = new Date();
     }

@@ -19,15 +19,14 @@ import java.util.List;
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/stomp/chat")
-                .setAllowedOrigins("http://localhost:8080")
-                .withSockJS(); //WebSocket 연결 엔드포인트
-        registry.setPreserveReceiveOrder(true);
+        registry.addEndpoint("/ws").setAllowedOriginPatterns("*").withSockJS();
+                //.setAllowedOrigins("*") //WebSocket 연결 엔드포인트
+        //registry.setPreserveReceiveOrder(true);
     }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.setApplicationDestinationPrefixes("/app"); //MessageMapping 컨트롤러 접두사
+        registry.setApplicationDestinationPrefixes("/pub"); //MessageMapping 컨트롤러 접두사
         registry.enableSimpleBroker("/topic", "/queue");
     }
 

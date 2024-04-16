@@ -27,4 +27,6 @@ public class BeanConfig {
     public MongoTemplate mongoTemplate() throws Exception {
         return new MongoTemplate(mongoDatabaseFactory());
     }
+
+
 }

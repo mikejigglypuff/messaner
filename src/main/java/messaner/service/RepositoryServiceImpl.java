@@ -78,15 +78,15 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Override
-    public boolean addChat(ChatDTO chatDTO) {
+    public boolean addChat(ChatDTO chatDTO, String user) {
         try {
             Room room = this.getRoom(chatDTO);
             List<Chat> chats = room.getChats();
-            Chat newChat = new Chat(chatDTO);
+            Chat newChat = new Chat(chatDTO, user);
             chats.add(newChat);
-            for(User user : room.getSubscribers()) {
-                if(user.getName().equals(chatDTO.getUser())) {
-                    user.addChat(newChat);
+            for(User u : room.getSubscribers()) {
+                if(u.getName().equals(user)) {
+                    u.addChat(newChat);
                 }
             }
             Query query = new Query(Criteria.where("name").is(chatDTO.getRoom()));

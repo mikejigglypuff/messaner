@@ -12,7 +12,7 @@ public interface RepositoryService {
     public List<Chat> getChats(RoomDTO roomDTO);
     public boolean createChannel(UserDTO userDTO);
     public boolean addSubscription(UserDTO userDTO);
-    public boolean addChat(ChatDTO chatDTO);
+    public boolean addChat(ChatDTO chatDTO, String user);
     public List<Room> getRooms(RoomDTO roomDTO);
     public boolean RemoveSubscription(UserDTO userDTO);
     public boolean userAlreadyExists(String user);

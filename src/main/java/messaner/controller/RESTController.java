@@ -12,14 +12,12 @@ import messaner.service.RepositoryService;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @RequiredArgsConstructor
 @RestController
 public class RESTController {
+    static int COOKIE_EXPIRES = 60 * 60;
     private final RepositoryService repositoryService;
 
     @PostMapping("/room/create")
@@ -33,27 +31,14 @@ public class RESTController {
         return "채널 생성 실패";
     }
 
-    @GetMapping("/rooms/{room}")
-    public String searchRooms(@RequestParam String room) {
-        try {
-            List<Room> rooms = repositoryService.getRooms(new RoomDTO(room));
-            Gson gson = new Gson();
-            gson.toJson(rooms);
-            return gson.toString();
-        } catch (NoSuchElementException ne) {
-            ne.printStackTrace();
-            return "no room matches";
-        }
-    }
-
     @GetMapping("/rooms")
-    public String getRooms() {
+    public String searchRooms(@RequestParam(value="name", required = false, defaultValue = "") String name) {
         try {
-            List<Room> rooms = repositoryService.getRooms(new RoomDTO(""));
+            List<Room> rooms;
+            rooms = repositoryService.getRooms(new RoomDTO(name));
             Gson gson = new Gson();
-            gson.toJson(rooms);
-            System.out.println(gson.toString());
-            return gson.toString();
+            System.out.println(gson.toJson(rooms));
+            return gson.toJson(rooms);
         } catch (NoSuchElementException ne) {
             ne.printStackTrace();
             return "no room matches";
@@ -61,7 +46,7 @@ public class RESTController {
     }
 
     //구독 이후 접속
-    @GetMapping("/chatting/{room}")
+    @GetMapping("/room/chatting/{room}")
     public String getChats(
             @CookieValue(value = "userId") Optional<String> cookie, @PathVariable String room
     ) {
@@ -71,8 +56,7 @@ public class RESTController {
                 List<Chat> chats = repositoryService.getChats(userDTO);
 
                 Gson gson = new Gson();
-                gson.toJson(chats);
-                return gson.toString();
+                return gson.toJson(chats);
             } else {
                 return "/topic/chatting/" + userDTO.getRoom();
             }
@@ -88,6 +72,7 @@ public class RESTController {
                 uuid = "user" + UUID.randomUUID().toString();
             }
             Cookie newCookie = new Cookie("userId", uuid);
+            newCookie.setMaxAge(COOKIE_EXPIRES);
             res.addCookie(newCookie);
         }
 
