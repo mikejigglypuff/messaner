@@ -34,7 +34,9 @@ public class STOMPController {
     @MessageMapping("/chat")
     public void sendChat(@CookieValue("userId") Optional<String> cookie, @Payload ChatDTO chatDTO) {
         if(cookie.isPresent()) {
-            String sendUrl, sendMsg, user = cookie.get();
+
+            String sendUrl, sendMsg;
+            String user = cookie.get();
 
             if (repositoryService.addChat(chatDTO, user)) {
                 sendUrl = "/topic/chat/" + chatDTO.getRoom();

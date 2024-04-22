@@ -73,6 +73,7 @@ public class RESTController {
             }
             Cookie newCookie = new Cookie("userId", uuid);
             newCookie.setMaxAge(COOKIE_EXPIRES);
+            newCookie.setHttpOnly(true);
             res.addCookie(newCookie);
         }
 

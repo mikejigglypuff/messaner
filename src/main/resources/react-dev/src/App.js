@@ -1,6 +1,6 @@
 import logo from './logo.svg';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./index.css";
 import SockJS from "sockjs-client";
 import axios from "axios";
@@ -14,51 +14,42 @@ function App() {
     const [roomName, setRoomName] = useState("");
     const [message, setMessage] = useState("");
     const [chatting, setChatting] = useState([]);
-    const [client, setClient] = useState(null);
+    const client = useRef(null);
 
     useEffect(() => {
-        if(!client) {
+        if(!client.current) {
             getCookie();
         } else {
             getChat();
         }
     }, []);
 
-    useEffect(() => {
-        if(!client) {
-            getRooms();
-        } else {
-            getChat();
-        }
-    }, [client]);
-
     const connect = (url) => {
-        if(!client) {
-            const newClient = new Client({
-                webSocketFactory: () => { return new SockJS(`http://${defaultURL}/ws`) },
-                onConnect: () => {
-                    newClient.subscribe(`/topic/chat${url}`, res => {
-                        console.log("접속 완료");
+        setRoomName(url);
+        client.current = new Client({
+            webSocketFactory: () => { return new SockJS(`http://${defaultURL}/ws`) },
+            onConnect: () => {
+                client.current.subscribe(`/topic/${url}`, res => {
+                    console.log("접속 완료");
+                    getChat(url);
+                }); //a에 구독
+            },
+            reconnectDelay: 5000,
+            heartbeat: {
+                incoming: 4000,
+                outgoing: 4000
+            },
 
-                    }); //a에 구독
-                },
-                reconnectDelay: 5000,
-                heartbeat: {
-                    incoming: 10000,
-                    outgoing: 10000
-                },
+        });
 
-            });
-
-            newClient.activate();
-            setClient(newClient);
-        }
+        client.current.activate();
+        console.log(client.current);
     }
 
     const sendChat = async () => {
-        if(client && message) {
-            client.publish({
-                destination: "/pub/chat/", 
+        if(client.current && message) {
+            client.current.publish({
+                destination: "/pub/chat", 
                 body: JSON.stringify({
                     room: roomName,
                     chat: message
@@ -70,12 +61,12 @@ function App() {
     }
 
     const disconnect = () => {
-        if(client && client.connected()) {
-            client.deactivate();
+        if(client.current) {
+            client.current.deactivate();
             setChatting([]);
             setMessage("");
             setRoomName("/");
-            setClient(null);
+            client.current = null;
         }
     }
 
@@ -93,7 +84,7 @@ function App() {
         const url = (roomName) ? `?name=${roomName}` : "";
         const rooms = await axios.get(`/rooms${url}`);
         setRoomList(rooms.data);
-        console.log(roomList);
+        console.log(rooms);
     }
 
     const createChannel = async () => {
@@ -115,14 +106,14 @@ function App() {
         }
     }
 
-    const getChat = async () => {
-        if(roomName && client) {
-            const chat = await axios({
-                method: "get",
-                url: `/room/chatting${roomName}`,
-            });
-            setChatting(chat.data);
-        }
+    const getChat = async (url) => {
+        const chat = await axios({
+            method: "get",
+            url: `/room/chatting${url}`,
+        });
+        setChatting(chat.data);
+        console.log(chat);
+        
     }
 
     const typeMessage = e => {
@@ -134,24 +125,25 @@ function App() {
     }
 
 
-    return (client) ? chatting.map(chat => {
-        <div className="chatRoom">
+    return (client.current) ? <div className="chatRoom">
             <div className="chatRoomHeader">
                 <button variant="outline">
                     <ArrowLeftIcon onClick={disconnect} />
                 </button>
-                <div className="chatRoomName">chat.room</div>
+                <div className="chatRoomName">{roomName}</div>
             </div>
-            <div className="chatRoomBody">
-                <div className="chatInfo">
-                    <div>JW</div>
-                    <div className="chatWriter">chat.writer</div>
-                </div>
-                <div className="chatBubble">
-                    <div className="chatMessage">chat.message</div>
-                    <div className="chatCreatedAt">chat.createdAt</div>
-                </div>
-            </div>
+            { chatting.map(chat => (
+                <div className="chatRoomBody">
+                    <div className="chatInfo">
+                        <div>JW</div>
+                        <div className="chatWriter">{chat.writer}</div>
+                    </div>
+                    <div className="chatBubble">
+                        <div className="chatMessage">{chat.message}</div>
+                        <div className="chatCreatedAt">{chat.createdAt}</div>
+                    </div>
+                    </div>
+            )) }
             <div className="chatRoomFooter">
                 <input className="msagInput" placeholder="Type a message" onChange={typeMessage} />
                 <button size="icon" onClick={sendChat}>
@@ -159,8 +151,7 @@ function App() {
                     <span className="msgSendButton">Send</span>
                 </button>
             </div>
-        </div>
-            }) : <div className="mainPage">
+        </div> : <div className="mainPage">
                     <div className="mainHeader">
                         <div className="mainTitle">Chat Rooms</div>
                         <div className="searchRoom">
@@ -171,12 +162,12 @@ function App() {
                     </div>
                     <div className="roomList">
                         { Object.values(roomList).map(val => (
-                            <label onClick={() => connect(`/${val.name}`)}>
+                            <label onClick={() => connect(val.name)}>
                                 <div className="roomInfo" key={val.name}>
-                                    <div className="roomName">val.name</div>
+                                    <div className="roomName">{val.name}</div>
                                     <div className="roomMember">
                                         <UserIcon />
-                                        <span className="roomMemberNum">val.subscribers.length</span>
+                                        <span className="roomMemberNum">{val.subscribers.length}</span>
                                     </div>
                                 </div>
                             </label>
