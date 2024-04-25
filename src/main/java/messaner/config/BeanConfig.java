@@ -4,6 +4,8 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import messaner.JwtProvider;
+import messaner.service.RepositoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +29,4 @@ public class BeanConfig {
     public MongoTemplate mongoTemplate() throws Exception {
         return new MongoTemplate(mongoDatabaseFactory());
     }
-
-
 }

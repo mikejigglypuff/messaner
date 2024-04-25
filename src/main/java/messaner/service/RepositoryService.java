@@ -17,4 +17,6 @@ public interface RepositoryService {
     public boolean RemoveSubscription(UserDTO userDTO);
     public boolean userAlreadyExists(String user);
     public boolean userSubscribed(UserDTO userDTO);
+
+    public String createUser();
 }

@@ -9,6 +9,27 @@ import { Client } from "@stomp/stompjs";
 const defaultURL = process.env.REACT_APP_DEFAULT_URL;
 const stompURL = process.env.REACT_APP_STOMP_URL;
 
+axios.interceptors.request.use(config => {
+    const token = localStorage.getItem("token");
+    if(token) {
+        config.headers.Authorization = token;
+    }
+
+    return config;
+}, err => {
+    return Promise.reject(err);
+});
+
+axios.interceptors.response.use(res => {
+    const token = res.headers.getAuthorization();
+    if(token) {
+        localStorage.setItem("token", token);
+    }
+    
+}, err => {
+    return Promise.reject(err);
+});
+
 function App() {
     const [roomList, setRoomList] = useState([]);
     const [roomName, setRoomName] = useState("");
@@ -18,7 +39,7 @@ function App() {
 
     useEffect(() => {
         if(!client.current) {
-            getCookie();
+            getSession();
         } else {
             getChat();
         }
@@ -70,7 +91,7 @@ function App() {
         }
     }
 
-    const getCookie = async () => {
+    const getSession = async () => {
         await axios({
             method: "get",
             url: `/connect`,
