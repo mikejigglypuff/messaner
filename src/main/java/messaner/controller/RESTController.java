@@ -19,20 +19,18 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
-@RestController
 public class RESTController {
-    private final JwtProvider jwtProvider;
     private final RepositoryService repositoryService;
 
     @Autowired
-    public RESTController(RepositoryService repositoryService, JwtProvider jwtProvider) {
+    public RESTController(RepositoryService repositoryService) {
         this.repositoryService = repositoryService;
-        this.jwtProvider = jwtProvider;
     }
 
     @PreAuthorize("authenticated()")
     @PostMapping("/room/create")
-    public String createChannel(@Payload RoomDTO roomDTO) {
+    @ResponseBody
+    public String createRoom(@Payload RoomDTO roomDTO) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if(authentication.isAuthenticated()) {
@@ -44,11 +42,12 @@ public class RESTController {
         return "채널 생성 실패";
     }
 
-    @GetMapping("/rooms")
+    @PreAuthorize("permitAll()")
+    @GetMapping("/room")
+    @ResponseBody
     public String searchRooms(@RequestParam(value="name", required = false, defaultValue = "") String name) {
         try {
-            List<Room> rooms;
-            rooms = repositoryService.getRooms(new RoomDTO(name));
+            List<Room> rooms = repositoryService.getRooms(new RoomDTO(name));
             Gson gson = new Gson();
             System.out.println(gson.toJson(rooms));
             return gson.toJson(rooms);
@@ -61,6 +60,7 @@ public class RESTController {
     //구독 이후 접속
     @PreAuthorize("authenticated()")
     @GetMapping("/room/chatting/{room}")
+    @ResponseBody
     public String getChats(@PathVariable String room) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -78,10 +78,9 @@ public class RESTController {
         return "/";
     }
 
-    @PreAuthorize("perMitAll()")
-    @GetMapping("/connect")
-    public String Connect(@CookieValue(value = "userId") Optional<String> cookie, HttpServletResponse res) {
-
-        return "/rooms";
+    @PreAuthorize("authenticated()")
+    @GetMapping("/")
+    public String Main() {
+        return "/index";
     }
 }

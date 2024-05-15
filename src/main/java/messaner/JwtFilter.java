@@ -34,13 +34,13 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String token = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        if(token.isEmpty()) {
+        if(token != null) {
+            if(jwtProvider.validateToken(token)) {
+                Authentication authentication = createAuthentication(token);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        } else {
             response.setHeader("authorization", jwtProvider.createToken(repositoryService.createUser(), Role.GUEST.getRole()));
-        }
-
-        if(jwtProvider.validateToken(token)) {
-            Authentication authentication = createAuthentication(token);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
         filterChain.doFilter(request, response);

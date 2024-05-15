@@ -19,10 +19,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(authorize -> authorize
+                .requestMatchers("/static/**", "/error/**").permitAll()
                 .requestMatchers(
-                        "/room/create", "/room/chatting/*", "/chat", "/unsubscribe/**"
+                        "/room/create", "/room/chatting/**", "/chat", "/unsubscribe/**"
                 ).authenticated()
-                .requestMatchers("*").permitAll())
+                .anyRequest().permitAll())
                 .csrf(c -> c.disable())
                 .httpBasic(h -> h.disable())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

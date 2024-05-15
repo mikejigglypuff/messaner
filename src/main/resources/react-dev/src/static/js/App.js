@@ -1,7 +1,4 @@
-import logo from './logo.svg';
-
 import React, { useState, useEffect, useRef } from "react";
-import "./index.css";
 import SockJS from "sockjs-client";
 import axios from "axios";
 import { Client } from "@stomp/stompjs";
@@ -94,7 +91,7 @@ function App() {
     const getSession = async () => {
         await axios({
             method: "get",
-            url: `/connect`,
+            url: "/",
             withCredentials: true,
         });
 
