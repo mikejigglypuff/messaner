@@ -31,6 +31,7 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
 	implementation 'ch.qos.logback:logback-classic'
 	implementation 'org.slf4j:slf4j-api'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
@@ -40,6 +41,47 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
+def frontendDir = "$projectDir/src/main/resources/react-dev"
+
+sourceSets {
+	main {
+		resources { srcDirs = ["$projectDir/src/main/resources"]
+		}
+	}
+}
+
+processResources { dependsOn "copyReactBuildFiles" }
+
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+tasks.register('installReact', Exec) {
+	workingDir "$frontendDir"
+	inputs.dir "$frontendDir"
+	group = BasePlugin.BUILD_GROUP
+	if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
+		commandLine "npm.cmd", "audit", "fix"
+		commandLine 'npm.cmd', 'install'
+	} else {
+		commandLine "npm", "audit", "fix" commandLine 'npm', 'install'
+	}
+}
+
+tasks.register('buildReact', Exec) {
+	dependsOn "installReact"
+	workingDir "$frontendDir"
+	inputs.dir "$frontendDir"
+	group = BasePlugin.BUILD_GROUP
+	if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
+		commandLine "npm.cmd", "run-script", "build"
+	} else {
+		commandLine "npm", "run-script", "build"
+	}
+}
+
+tasks.register('copyReactBuildFiles', Copy) {
+	dependsOn "buildReact"
+	from "$frontendDir/build"
+	into "$projectDir/src/main/resources/static"
 }

@@ -19,6 +19,7 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @Controller
+@RequestMapping("/api")
 public class STOMPController {
 
     private final RepositoryService repositoryService;

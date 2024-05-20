@@ -15,10 +15,13 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+@Controller
+@RequestMapping("/api")
 public class RESTController {
     private final RepositoryService repositoryService;
 
@@ -43,11 +46,12 @@ public class RESTController {
     }
 
     @PreAuthorize("permitAll()")
-    @GetMapping("/room")
+    @GetMapping("rooms")
     @ResponseBody
     public String searchRooms(@RequestParam(value="name", required = false, defaultValue = "") String name) {
         try {
-            List<Room> rooms = repositoryService.getRooms(new RoomDTO(name));
+            //List<Room> rooms = repositoryService.getRooms(new RoomDTO(name));
+            List<Room> rooms = new ArrayList<>();
             Gson gson = new Gson();
             System.out.println(gson.toJson(rooms));
             return gson.toJson(rooms);
@@ -59,7 +63,7 @@ public class RESTController {
 
     //구독 이후 접속
     @PreAuthorize("authenticated()")
-    @GetMapping("/room/chatting/{room}")
+    @GetMapping("room/chatting/{room}")
     @ResponseBody
     public String getChats(@PathVariable String room) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -79,8 +83,8 @@ public class RESTController {
     }
 
     @PreAuthorize("authenticated()")
-    @GetMapping("/")
+    @GetMapping("")
     public String Main() {
-        return "/index";
+        return "index";
     }
 }

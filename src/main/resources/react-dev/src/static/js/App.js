@@ -91,7 +91,7 @@ function App() {
     const getSession = async () => {
         await axios({
             method: "get",
-            url: "/",
+            url: "/api",
             withCredentials: true,
         });
 
@@ -100,7 +100,7 @@ function App() {
 
     const getRooms = async () => {
         const url = (roomName) ? `?name=${roomName}` : "";
-        const rooms = await axios.get(`/rooms${url}`);
+        const rooms = await axios.get(`/api/rooms${url}`);
         setRoomList(rooms.data);
         console.log(rooms);
     }
@@ -109,7 +109,7 @@ function App() {
         if(roomName) {
             const callbackUrl = await axios({
                 method: "post",
-                url: `/room/create`,
+                url: `/api/room/create`,
                 withCredentials: true,
                 body: {
                     room: roomName
@@ -127,7 +127,7 @@ function App() {
     const getChat = async (url) => {
         const chat = await axios({
             method: "get",
-            url: `/room/chatting${url}`,
+            url: `/api/room/chatting${url}`,
         });
         setChatting(chat.data);
         console.log(chat);
