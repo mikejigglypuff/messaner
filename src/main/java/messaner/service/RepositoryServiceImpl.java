@@ -79,7 +79,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         try {
             Room room = this.getRoom(chatDTO);
             List<Chat> chats = room.getChats();
-            Chat newChat = new Chat(chatDTO, user);
+            Chat newChat = new Chat(chatDTO, user, new Date());
             chats.add(newChat);
             for(User u : room.getSubscribers()) {
                 if(u.getName().equals(user)) {
