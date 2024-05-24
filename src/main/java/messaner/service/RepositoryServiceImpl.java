@@ -1,5 +1,6 @@
 package messaner.service;
 
+import lombok.extern.slf4j.Slf4j;
 import messaner.DTO.ChatDTO;
 import messaner.DTO.RoomDTO;
 import messaner.DTO.UserDTO;
@@ -8,14 +9,18 @@ import messaner.model.Room;
 import messaner.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
+@Slf4j
 @Service
 public class RepositoryServiceImpl implements RepositoryService {
     private final MongoTemplate template;
@@ -28,12 +33,44 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Override
-    public List<Chat> getChats(RoomDTO roomDTO) throws NoSuchElementException {
-        Query query = new Query(Criteria.where("name").is(roomDTO.getRoom()));
-        Room curRoom = template.findOne(query, Room.class);
+    public boolean addChat(ChatDTO chatDTO, String user, LocalDateTime dateTime) {
+        UserDTO userDTO = new UserDTO(chatDTO.getRoom(), user);
+        try {
+            if(!roomExists(chatDTO.getRoom())) throw new NoSuchElementException();
 
-        if(curRoom == null) throw new NoSuchElementException();
-        return curRoom.getChats();
+            if(userSubscribed(userDTO)) {
+                LocalDateTime date = (dateTime != null) ? dateTime : LocalDateTime.now();
+                Chat newChat = new Chat(chatDTO, user, date);
+
+                Query chatQuery = new Query(Criteria.where("name").is(chatDTO.getRoom()));
+                Update chatUpdate = new Update().push("chats", newChat);
+                template.updateFirst(chatQuery, chatUpdate, Chat.class);
+
+                Query subQuery = new Query(Criteria.where("subscribers").elemMatch(Criteria.where("name").is(user)));
+                List<Chat> subChat = template.findOne(subQuery, User.class).getChats();
+                subChat.add(newChat);
+                template.save(subChat);
+            }
+            return true;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public boolean addSubscription(UserDTO userDTO) {
+        try {
+            if(!roomExists(userDTO.getRoom())) throw new NoSuchElementException();
+
+            Query query = new Query(Criteria.where("name").is(userDTO.getRoom()));
+            Update update = new Update().push("subscribers", new User(userDTO));
+            template.updateFirst(query, update, Room.class);
+            return true;
+        } catch (Exception e) {
+            log.error(e.getMessage()); //로깅 방식 변경할 것
+            return false;
+        }
     }
 
     @Override
@@ -46,101 +83,9 @@ public class RepositoryServiceImpl implements RepositoryService {
 
             return true;
         } catch (Exception e) {
-            e.printStackTrace(); //로깅 방식 변경할 것
+            log.error(e.getMessage()); //로깅 방식 변경할 것
             return false;
         }
-    }
-
-    @Override
-    public boolean addSubscription(UserDTO userDTO) {
-        try {
-            Room room = this.getRoom(userDTO);
-            room.getSubscribers().add(new User(userDTO, new ArrayList<>()));
-            Query query = new Query(Criteria.where("name").is(userDTO.getRoom()));
-            Update update = new Update().set("subscribers", room.getSubscribers());
-            template.updateFirst(query, update, Room.class);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace(); //로깅 방식 변경할 것
-            return false;
-        }
-    }
-    
-    private Room getRoom(RoomDTO roomDTO) throws NoSuchElementException {
-        Query query = new Query(Criteria.where("name").is(roomDTO.getRoom()));
-        Room room = template.findOne(query, Room.class);
-
-        if(room == null) throw new NoSuchElementException();
-        return room;
-    }
-
-    @Override
-    public boolean addChat(ChatDTO chatDTO, String user) {
-        try {
-            Room room = this.getRoom(chatDTO);
-            List<Chat> chats = room.getChats();
-            Chat newChat = new Chat(chatDTO, user, new Date());
-            chats.add(newChat);
-            for(User u : room.getSubscribers()) {
-                if(u.getName().equals(user)) {
-                    u.addChat(newChat);
-                }
-            }
-            Query query = new Query(Criteria.where("name").is(chatDTO.getRoom()));
-            Update update = new Update().set("chats", chats);
-            template.updateFirst(query, update, Room.class);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    @Override
-    public List<Room> getRooms(RoomDTO roomDTO) throws NoSuchElementException {
-        Query query = new Query(Criteria.where("name").regex(roomDTO.getRoom(), null));
-        List<Room> curRoom = template.find(query, Room.class);
-
-        if(curRoom.isEmpty()) { throw new NoSuchElementException(); }
-        return curRoom;
-    }
-
-    @Override
-    public boolean RemoveSubscription(UserDTO userDTO) {
-        try {
-            Room room = this.getRoom(userDTO);
-            List<User> subs = room.getSubscribers();
-            subs.removeIf(sub -> sub.getName().equals(userDTO.getUser()));
-            Query query = new Query(Criteria.where("name").is(userDTO.getRoom()));
-            Update update = new Update().set("subscribers", subs);
-            template.updateFirst(query, update, Room.class);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    @Override
-    public boolean userAlreadyExists(String user) {
-        Query query = new Query(Criteria.where("name").is(user));
-        return template.exists(query, User.class);
-    }
-
-    @Override
-    public boolean userSubscribed(UserDTO userDTO) {
-        Query query = new Query(Criteria.where("name").is(userDTO.getRoom()));
-        Room room = template.findOne(query, Room.class);
-
-        if(room != null) {
-            List<User> subs = room.getSubscribers();
-
-            for (User user : subs) {
-                if(user.getName().equals(userDTO.getUser())) { return true; }
-            }
-        }
-
-        return false;
     }
 
     @Override
@@ -150,5 +95,75 @@ public class RepositoryServiceImpl implements RepositoryService {
             uuid = "user" + UUID.randomUUID().toString();
         }
         return uuid;
+    }
+
+    @Override
+    public List<Chat> getChats(RoomDTO roomDTO) throws NoSuchElementException {
+        Query query = new Query(Criteria.where("name").is(roomDTO.getRoom()));
+        Room curRoom = template.findOne(query, Room.class);
+
+        if(curRoom == null) throw new NoSuchElementException();
+        return curRoom.getChats();
+    }
+    
+
+    @Override
+    public List<Room> getRooms(RoomDTO roomDTO) throws NoSuchElementException {
+        Query query = new Query(Criteria.where("name").regex(roomDTO.getRoom(), null));
+        query.with(Sort.by(Sort.Order.asc("_id")));
+        List<Room> curRoom = template.find(query, Room.class);
+
+        if(curRoom.isEmpty()) { throw new NoSuchElementException(); }
+        return curRoom;
+    }
+
+    @Override
+    public boolean removeChannel(RoomDTO roomDTO) {
+        Query query = new Query(Criteria.where("name").is(roomDTO.getRoom()));
+        try {
+            template.remove(query, Room.class);
+            return true;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public boolean removeSubscription(UserDTO userDTO) {
+        try {
+            if(!roomExists(userDTO.getRoom())) throw new NoSuchElementException();
+
+            Query query = new Query(
+                Criteria.where("subscribers").elemMatch(Criteria.where("name").is(userDTO.getUser()))
+            );
+            template.remove(query, User.class);
+            return true;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public boolean userAlreadyExists(String user) {
+        Query query = new Query(Criteria.where("subscribers").elemMatch(Criteria.where("name").is(user)));
+        return template.exists(query, User.class);
+    }
+
+    @Override
+    public boolean userSubscribed(UserDTO userDTO) {
+        Query query = new Query(
+                Criteria.where("name").is(userDTO.getRoom())
+                        .and("subscribers.name").is(userDTO.getUser())
+        );
+        Room room = template.findOne(query, Room.class);
+
+        return room != null;
+    }
+
+    private boolean roomExists(String room) {
+        Query query = new Query(Criteria.where("name").is(room));
+        return template.exists(query, Room.class);
     }
 }

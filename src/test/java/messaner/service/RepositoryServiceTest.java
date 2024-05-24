@@ -22,9 +22,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.TestConstructor;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.*;
@@ -34,13 +33,19 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class RepositoryServiceTest {
     private final RepositoryService repositoryService;
+    private final Chat[] compChats;
+    private final UserDTO createdRoom;
 
     @Autowired
-    RepositoryServiceTest(RepositoryService repositoryService){
+    RepositoryServiceTest(RepositoryService repositoryService) {
         this.repositoryService = repositoryService;
+        this.compChats = new Chat[]{
+                new Chat(new ChatDTO("와구와구프린세스", "나는배가고프다"), "erpin", "2024-05-21T23:17:43.927Z"),
+                new Chat(new ChatDTO("와구와구프린세스", "인민들에게빵을착취하는사악한요정여왕몰아내자"), "komi", "2024-05-22T00:11:50.101Z"),
+        };
+        this.createdRoom = new UserDTO("개노잼정령산", "naia");
     }
 
-    //완
     @Order(1)
     @ParameterizedTest
     @ValueSource(strings = {"useraa8c4b16-8320-4cd1-897d-ceea077d6b46"})
@@ -68,7 +73,7 @@ public class RepositoryServiceTest {
 
         SoftAssertions soft = new SoftAssertions();
         for(int i = 0; i < expected; i++) {
-            soft.assertThat(rooms.get(i)).usingRecursiveAssertion().isEqualTo(originRooms.get(i));
+            soft.assertThat(rooms.get(i)).usingRecursiveComparison().isEqualTo(originRooms.get(i));
         }
     }
 
@@ -78,18 +83,15 @@ public class RepositoryServiceTest {
         RoomDTO roomDTO = new RoomDTO("와구와구프린세스");
         List<Chat> chats = repositoryService.getChats(roomDTO);
 
-        List<Chat> comp = new ArrayList<>();
-        comp.add(new Chat(new ChatDTO("와구와구프린세스", "나는배가고프다"), "erpin", new Date()));
-        comp.add(new Chat(new ChatDTO("와구와구프린세스", "인민들에게빵을착취하는사악한요정여왕몰아내자"), "komi", new Date()));
+        List<Chat> comp = new ArrayList<>(Arrays.asList(compChats));
 
         SoftAssertions soft = new SoftAssertions();
 
         for(int i = 0; i < chats.size(); i++) {
-            soft.assertThat(chats.get(i)).usingRecursiveAssertion().isEqualTo(comp.get(i));
+            soft.assertThat(chats.get(i)).usingRecursiveComparison().isEqualTo(comp.get(i));
         }
     }
 
-    //완
     @Test
     @Order(1)
     public void getNoChats() {
@@ -101,12 +103,11 @@ public class RepositoryServiceTest {
 
     @Order(1)
     @ParameterizedTest
-    @ValueSource(strings = {"erpin"})
+    @ValueSource(strings = {"user126a1cd5-c91e-4553-8694-baa38ce4a70d"})
     public void userAlreadyExists(String user) {
         assertThat(repositoryService.userAlreadyExists(user)).isTrue();
     }
 
-    //완
     @Order(1)
     @ParameterizedTest
     @ValueSource(strings = {"butter"})
@@ -133,13 +134,18 @@ public class RepositoryServiceTest {
     @ValueSource(strings = {"erpin"})
     public void addChat(String user) {
         ChatDTO chatDTO = new ChatDTO("버터왕국", "버터는놀려야제맛");
+        LocalDateTime dateTime = LocalDateTime.now();
 
-        repositoryService.addChat(chatDTO, user);
+        repositoryService.addChat(chatDTO, user, dateTime);
 
+        Chat compChat = new Chat(chatDTO, user, dateTime);
         List<Room> room = repositoryService.getRooms(new RoomDTO("버터왕국"));
 
-        assertThat(room.get(0).getChats().contains(new Chat(chatDTO, user, new Date()))).isTrue();
-        assertThat(room.get(0).getSubscribers().get(0).getChats().contains(new Chat(chatDTO, user, new Date()))).isTrue();
+        assertThat(room.get(0).getChats().contains(compChat)).isTrue();
+
+        List<User> subscribers = room.get(0).getSubscribers();
+        User erpin = subscribers.get(subscribers.indexOf(new User(new UserDTO("버터왕국", "erpin"))));
+        assertThat(erpin.getChats().contains(new Chat(chatDTO, user, dateTime))).isTrue();
     }
 
     @Test
@@ -152,37 +158,34 @@ public class RepositoryServiceTest {
 
         List<Room> room = repositoryService.getRooms(roomDTO);
 
-        assertThat(room.get(0).getSubscribers().contains(new User(userDTO, new ArrayList<>()))).isTrue();
+        assertThat(room.get(0).getSubscribers().contains(new User(userDTO))).isTrue();
     }
 
-    //완
     @Order(2)
     @ParameterizedTest
     @ValueSource(strings = {"erpin"})
     public void chatWrongRoom(String user) {
         ChatDTO chatDTO = new ChatDTO("요정왕국", "버터는놀려야제맛");
 
-        assertThat(repositoryService.addChat(chatDTO, user)).isFalse();
+        assertThat(repositoryService.addChat(chatDTO, user, null)).isFalse();
     }
 
     @Order(2)
     @ParameterizedTest
     @MethodSource("originRooms")
     public void createChannel(List<Room> originRooms) {
-        UserDTO userDTO = new UserDTO("개노잼정령산", "naia");
-        repositoryService.createChannel(userDTO);
+        repositoryService.createChannel(createdRoom);
 
-        int expected = originRooms.size();
+        int expected = originRooms.size() + 1;
         List<Room> rooms = repositoryService.getRooms(new RoomDTO(""));
 
-        assertThat(rooms.size()).isEqualTo(expected + 1);
+        assertThat(rooms.size()).isEqualTo(expected);
 
-        Room newRoom = rooms.get(expected);
-        assertThat(newRoom).extracting("name").isEqualTo(userDTO.getRoom());
-        assertThat(newRoom.getSubscribers().get(0)).extracting("name").isEqualTo(userDTO.getUser());
+        Room newRoom = rooms.get(0);
+        assertThat(newRoom).extracting("name").isEqualTo(createdRoom.getRoom());
+        assertThat(newRoom.getSubscribers().get(0)).extracting("name").isEqualTo(createdRoom.getUser());
     }
 
-    //완
     @Test
     @Order(2)
     public void subWrongRoom() {
@@ -191,25 +194,28 @@ public class RepositoryServiceTest {
         assertThat(repositoryService.addSubscription(userDTO)).isFalse();
     }
 
-    //완
     @Test
     @Order(3)
     public void removeSubError() {
         UserDTO userDTO = new UserDTO("롤토체스", "goblinMiko");
-        boolean remove = repositoryService.RemoveSubscription(userDTO);
-
-        assertThat(remove).isFalse();
+        assertThat(repositoryService.removeSubscription(userDTO)).isFalse();
     }
 
     @Test
     @Order(3)
     public void removeSubscription() {
         UserDTO userDTO = new UserDTO("롤더체스", "goblinMiko");
-        repositoryService.RemoveSubscription(userDTO);
+        repositoryService.removeSubscription(userDTO);
 
         List<User> userList = repositoryService.getRooms(new RoomDTO("롤더체스")).get(0).getSubscribers();
 
-        assertThat(userList.contains(new User(userDTO, new ArrayList<>()))).isTrue();
+        assertThat(userList.contains(new User(userDTO))).isTrue();
+    }
+
+    @Test
+    @Order(4)
+    public void removeChannel() {
+        assertThat(repositoryService.removeChannel(new RoomDTO(createdRoom.getRoom()))).isTrue();
     }
 
     static Stream<Arguments> originRooms() {
@@ -238,10 +244,10 @@ public class RepositoryServiceTest {
         List<Chat> chatList3 = new ArrayList<>();
         List<Chat> chatList4 = new ArrayList<>();
 
-        chatList2.add(new Chat(chatDTO1, "와구와구프린세스", new Date()));
-        chatList3.add(new Chat(chatDTO2, "와구와구프린세스", new Date()));
-        chatList4.add(new Chat(chatDTO1, "와구와구프린세스", new Date()));
-        chatList4.add(new Chat(chatDTO2, "와구와구프린세스", new Date()));
+        chatList2.add(new Chat(chatDTO1, "와구와구프린세스", "2024-05-21T23:17:43.927Z"));
+        chatList3.add(new Chat(chatDTO2, "와구와구프린세스", "2024-05-22T00:11:50.101Z"));
+        chatList4.add(new Chat(chatDTO1, "와구와구프린세스", "2024-05-21T23:17:43.927Z"));
+        chatList4.add(new Chat(chatDTO2, "와구와구프린세스", "2024-05-22T00:11:50.101Z"));
 
         userList1.add(new User(userDTO1, chatList1));
         userList2.add(new User(userDTO2, chatList1));

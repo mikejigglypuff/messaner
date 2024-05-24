@@ -42,7 +42,7 @@ public class STOMPController {
             String sendUrl, sendMsg;
             String user = cookie.get();
 
-            if (repositoryService.addChat(chatDTO, user)) {
+            if (repositoryService.addChat(chatDTO, user, null)) {
                 sendUrl = "/topic/chat/" + chatDTO.getRoom();
                 sendMsg = chatDTO.getChat();
             } else {
@@ -61,7 +61,7 @@ public class STOMPController {
     public void unsubscribeRoom(@CookieValue("userId") Optional<String> cookie, @DestinationVariable String room) {
         if(cookie.isPresent()) {
             UserDTO userDTO = new UserDTO(room, cookie.get());
-            repositoryService.RemoveSubscription(userDTO);
+            repositoryService.removeSubscription(userDTO);
         }
     }
 

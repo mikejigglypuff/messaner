@@ -20,5 +20,18 @@ public class User {
         chats = chatList;
     }
 
+    public User(UserDTO userDTO) {
+        name = userDTO.getUser();
+        chats = new ArrayList<>();
+    }
+
     public void addChat(Chat chat) { chats.add(chat); }
+
+    @Override
+    public boolean equals(Object o) {
+        if(o instanceof User user) {
+            return this.name.equals(user.getName()) && this.chats.equals(user.getChats());
+        }
+        return false;
+    }
 }
