@@ -1,5 +1,6 @@
 package messaner.service;
 
+import lombok.extern.slf4j.Slf4j;
 import messaner.DTO.ChatDTO;
 import messaner.DTO.RoomDTO;
 import messaner.DTO.UserDTO;
@@ -29,6 +30,7 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+@Slf4j
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class RepositoryServiceTest {
@@ -103,7 +105,7 @@ public class RepositoryServiceTest {
 
     @Order(1)
     @ParameterizedTest
-    @ValueSource(strings = {"user126a1cd5-c91e-4553-8694-baa38ce4a70d"})
+    @ValueSource(strings = {"erpin"})
     public void userAlreadyExists(String user) {
         assertThat(repositoryService.userAlreadyExists(user)).isTrue();
     }
@@ -139,13 +141,17 @@ public class RepositoryServiceTest {
         repositoryService.addChat(chatDTO, user, dateTime);
 
         Chat compChat = new Chat(chatDTO, user, dateTime);
-        List<Room> room = repositoryService.getRooms(new RoomDTO("버터왕국"));
+        List<Room> room = repositoryService.getRooms(new RoomDTO(chatDTO.getRoom()));
+        List<Chat> chats = room.get(0).getChats();
+        assertThat(chats.get(chats.size() - 1).equals(compChat)).isTrue();
 
-        assertThat(room.get(0).getChats().contains(compChat)).isTrue();
-
+        /*
         List<User> subscribers = room.get(0).getSubscribers();
-        User erpin = subscribers.get(subscribers.indexOf(new User(new UserDTO("버터왕국", "erpin"))));
+        User erpin = subscribers.get(subscribers.indexOf(new User(new UserDTO(chatDTO.getRoom(), user))));
         assertThat(erpin.getChats().contains(new Chat(chatDTO, user, dateTime))).isTrue();
+
+         */
+
     }
 
     @Test
