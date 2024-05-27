@@ -42,8 +42,14 @@ public class RepositoryServiceTest {
     RepositoryServiceTest(RepositoryService repositoryService) {
         this.repositoryService = repositoryService;
         this.compChats = new Chat[]{
-                new Chat(new ChatDTO("와구와구프린세스", "나는배가고프다"), "erpin", "2024-05-21T23:17:43.927Z"),
-                new Chat(new ChatDTO("와구와구프린세스", "인민들에게빵을착취하는사악한요정여왕몰아내자"), "komi", "2024-05-22T00:11:50.101Z"),
+                new Chat(new ChatDTO(
+                        "와구와구프린세스", "나는배가고프다"), "erpin", LocalDateTime.of(
+                                2024, 5, 21, 23, 17, 43, 927000000
+                )),
+                new Chat(new ChatDTO(
+                        "와구와구프린세스", "인민들에게빵을착취하는사악한요정여왕몰아내자"), "komi", LocalDateTime.of(
+                                2024, 5, 22, 0, 11, 50, 101000000
+                )),
         };
         this.createdRoom = new UserDTO("개노잼정령산", "naia");
     }
@@ -145,13 +151,11 @@ public class RepositoryServiceTest {
         List<Chat> chats = room.get(0).getChats();
         assertThat(chats.get(chats.size() - 1).equals(compChat)).isTrue();
 
-        /*
         List<User> subscribers = room.get(0).getSubscribers();
-        User erpin = subscribers.get(subscribers.indexOf(new User(new UserDTO(chatDTO.getRoom(), user))));
-        assertThat(erpin.getChats().contains(new Chat(chatDTO, user, dateTime))).isTrue();
+        User erpin = subscribers.get(1);
+        List<Chat> erpinChats = erpin.getChats();
 
-         */
-
+        assertThat(!erpinChats.isEmpty() && erpinChats.get(erpinChats.size() - 1).equals(compChat)).isTrue();
     }
 
     @Test
@@ -225,6 +229,15 @@ public class RepositoryServiceTest {
     }
 
     static Stream<Arguments> originRooms() {
+        LocalDateTime[] dates = new LocalDateTime[]{
+                LocalDateTime.of(
+                        2024, 5, 21, 23, 17, 43, 927000000
+                ),
+                LocalDateTime.of(
+                        2024, 5, 22, 0, 11, 50, 101000000
+                )
+        };
+
         RoomDTO roomDTO1 = new RoomDTO("버터왕국");
         RoomDTO roomDTO2 = new RoomDTO("사료스탕스");
         RoomDTO roomDTO3 = new RoomDTO("와구와구프린세스");
@@ -250,10 +263,10 @@ public class RepositoryServiceTest {
         List<Chat> chatList3 = new ArrayList<>();
         List<Chat> chatList4 = new ArrayList<>();
 
-        chatList2.add(new Chat(chatDTO1, "와구와구프린세스", "2024-05-21T23:17:43.927Z"));
-        chatList3.add(new Chat(chatDTO2, "와구와구프린세스", "2024-05-22T00:11:50.101Z"));
-        chatList4.add(new Chat(chatDTO1, "와구와구프린세스", "2024-05-21T23:17:43.927Z"));
-        chatList4.add(new Chat(chatDTO2, "와구와구프린세스", "2024-05-22T00:11:50.101Z"));
+        chatList2.add(new Chat(chatDTO1, "와구와구프린세스", dates[0]));
+        chatList3.add(new Chat(chatDTO2, "와구와구프린세스", dates[1]));
+        chatList4.add(new Chat(chatDTO1, "와구와구프린세스", dates[0]));
+        chatList4.add(new Chat(chatDTO2, "와구와구프린세스", dates[1]));
 
         userList1.add(new User(userDTO1, chatList1));
         userList2.add(new User(userDTO2, chatList1));

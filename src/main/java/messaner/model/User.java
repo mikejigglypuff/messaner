@@ -34,4 +34,15 @@ public class User {
         }
         return false;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("name: ").append(name).append("\n");
+
+        for(Chat c : chats) {
+            sb.append(c.toString()).append("\n");
+        }
+        return sb.toString();
+    }
 }

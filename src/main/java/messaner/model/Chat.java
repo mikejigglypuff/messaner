@@ -27,15 +27,6 @@ public class Chat {
         createdAt = date;
     }
 
-    public Chat(ChatDTO chatDTO, String user, String date) {
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-
-        room = chatDTO.getRoom();
-        writer = user;
-        message = chatDTO.getChat();
-        createdAt = LocalDateTime.parse(date, dateTimeFormatter);
-    }
-
     public Chat(ChatDTO chatDTO, String user) {
         room = chatDTO.getRoom();
         writer = user;
@@ -48,10 +39,15 @@ public class Chat {
     @Override
     public boolean equals(Object o) {
         if(o instanceof Chat chat) {
-            return this.room.equals(chat.getRoom()) && this.writer.equals(chat.getWriter())
-                && this.message.equals(chat.getMessage()) && this.createdAt.equals(chat.getCreatedAt());
+            return this.toString().equals(chat.toString());
         }
         return false;
     }
 
+    @Override
+    public String toString() {
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        return "room: " + room + " writer: " + writer + " msg: " + message +
+                " createdAt: " + dateTimeFormatter.format(createdAt);
+    }
 }

@@ -44,23 +44,11 @@ public class RepositoryServiceImpl implements RepositoryService {
 
                 Query chatQuery = new Query(Criteria.where("name").is(chatDTO.getRoom()));
                 Update chatUpdate = new Update().push("chats", newChat);
-                template.updateFirst(chatQuery, chatUpdate, Chat.class);
+                template.updateFirst(chatQuery, chatUpdate, Room.class);
 
-                /*
                 Query subQuery = new Query(Criteria.where("subscribers").elemMatch(Criteria.where("name").is(user)));
-                List<User> subs = template.find(chatQuery, User.class);
-
-                int index = 0;
-                for(int i = 0; i < subs.size(); i++) {
-                    if(subs.get(i).getName().equals(user)) {
-                        index = i;
-                        break;
-                    }
-                }
-
-                Update subUpdate = new Update().push("subscribers." + index + ".chats", newChat);
-                template.updateFirst(subQuery, subUpdate, Chat.class);
-                 */
+                Update subUpdate = new Update().push("subscribers.$.chats", newChat);
+                template.updateFirst(subQuery, subUpdate, Room.class);
             }
             return true;
         } catch (Exception e) {
@@ -158,14 +146,9 @@ public class RepositoryServiceImpl implements RepositoryService {
 
     @Override
     public boolean userAlreadyExists(String user) {
-        Query query = new Query(Criteria.where("_id").is("버터왕국")
-                .and("subscribers").elemMatch(Criteria.where("name").is(user)));
-        List<User> users = template.find(query, User.class);
-        for(User u : users) {
-            log.info(u.toString());
-        }
-        if(users.isEmpty()) log.info("user not found");
-        return template.exists(query, User.class);
+        Query query = new Query(Criteria.where("subscribers").elemMatch(Criteria.where("name").is(user)));
+        query.fields().include("name");
+        return template.exists(query, Room.class);
     }
 
     @Override
