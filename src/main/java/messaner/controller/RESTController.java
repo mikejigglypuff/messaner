@@ -30,7 +30,6 @@ public class RESTController {
         this.repositoryService = repositoryService;
     }
 
-    @PreAuthorize("authenticated()")
     @PostMapping("/room/create")
     @ResponseBody
     public String createRoom(@Payload RoomDTO roomDTO) {
@@ -45,13 +44,11 @@ public class RESTController {
         return "채널 생성 실패";
     }
 
-    @PreAuthorize("permitAll()")
-    @GetMapping("rooms")
+    @GetMapping("/rooms")
     @ResponseBody
     public String searchRooms(@RequestParam(value="name", required = false, defaultValue = "") String name) {
         try {
-            //List<Room> rooms = repositoryService.getRooms(new RoomDTO(name));
-            List<Room> rooms = new ArrayList<>();
+            List<Room> rooms = repositoryService.getRooms(new RoomDTO(name));
             Gson gson = new Gson();
             System.out.println(gson.toJson(rooms));
             return gson.toJson(rooms);
@@ -62,8 +59,7 @@ public class RESTController {
     }
 
     //구독 이후 접속
-    @PreAuthorize("authenticated()")
-    @GetMapping("room/chatting/{room}")
+    @GetMapping("/room/chatting/{room}")
     @ResponseBody
     public String getChats(@PathVariable String room) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -82,9 +78,8 @@ public class RESTController {
         return "/";
     }
 
-    @PreAuthorize("authenticated()")
     @GetMapping("")
     public String Main() {
-        return "index";
+        return "/index.html";
     }
 }

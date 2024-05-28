@@ -25,7 +25,6 @@ public class STOMPController {
     private final RepositoryService repositoryService;
     private final SimpMessagingTemplate messagingTemplate;
 
-    @PreAuthorize("authenticated()")
     @SubscribeMapping("/room/chatting/{room}")
     public void subscribeRoom(@CookieValue("userId") Optional<String> cookie, @DestinationVariable String room) {
         if(cookie.isPresent()) {
@@ -34,7 +33,6 @@ public class STOMPController {
         }
     }
 
-    @PreAuthorize("authenticated()")
     @MessageMapping("/chat")
     public void sendChat(@CookieValue("userId") Optional<String> cookie, @Payload ChatDTO chatDTO) {
         if(cookie.isPresent()) {
@@ -56,7 +54,6 @@ public class STOMPController {
         }
     }
 
-    @PreAuthorize("authenticated()")
     @MessageMapping("/unsubscribe/{room}")
     public void unsubscribeRoom(@CookieValue("userId") Optional<String> cookie, @DestinationVariable String room) {
         if(cookie.isPresent()) {

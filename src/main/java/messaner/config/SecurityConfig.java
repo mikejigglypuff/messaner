@@ -5,10 +5,11 @@ import messaner.JwtFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import java.io.IOException;
 
 @Configuration
 @RequiredArgsConstructor
@@ -18,15 +19,11 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/static/**", "/error/**").permitAll()
-                .requestMatchers(
-                        "/room/create", "/room/chatting/**", "/chat", "/unsubscribe/**"
-                ).authenticated()
-                .anyRequest().permitAll())
-                .csrf(c -> c.disable())
-                .httpBasic(h -> h.disable())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        http.authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
+                .csrf(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .sessionManagement(h -> h.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
     }

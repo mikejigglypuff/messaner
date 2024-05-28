@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.Base64;
 import java.util.Date;
+import java.util.function.Function;
 
 @Component
 public class JwtProvider {
@@ -34,14 +35,14 @@ public class JwtProvider {
         this.secretKey = Keys.hmacShaKeyFor(keyBase64Encoded.getBytes());
     }
 
-    public String createToken(String user, String role) {
+    public String createToken(String user) {
         ZonedDateTime now = ZonedDateTime.now();
         ZonedDateTime tokenExp = now.plusSeconds(expireTime);
 
-        return Jwts.builder()
+        return "Bearer " + Jwts.builder()
                 .issuedAt(Date.from(now.toInstant()))
                 .expiration(Date.from(tokenExp.toInstant()))
-                .claim("userId", user)
+                .subject(user)
                 .signWith(secretKey)
                 .compact();
     }
@@ -54,30 +55,23 @@ public class JwtProvider {
         String refreshToken = Jwts.builder()
                 .issuedAt(Date.from(now.toInstant()))
                 .expiration(Date.from(tokenExp.toInstant()))
-                .claim("userId", user)
+                .subject(user)
                 .signWith(secretKey)
                 .compact();
-
-
 
         return refreshToken;
     }
      */
 
-    public boolean validateToken(String token) {
-        try {
-            Jwt<?, ?> jwt = Jwts.parser()
-                    .verifyWith(secretKey)
-                    .build()
-                    .parse(token);
-            return true;
-        } catch (JwtException e) {
-            log.info(e.getMessage());
-        }
-        return false;
+    public String getUserId(String token) {
+        return this.getClaim(token, Claims::getSubject);
     }
 
-    public String getClaim(String token, String claim) {
+    public Date getExpiration(String token) {
+        return this.getClaim(token, Claims::getExpiration);
+    }
+
+    private <T>T getClaim(String token, Function<Claims, T> claimsResolver) {
         try {
             Claims claims = Jwts.parser()
                     .verifyWith(secretKey)
@@ -85,10 +79,22 @@ public class JwtProvider {
                     .parseSignedClaims(token)
                     .getPayload();
 
-            return claims.get(claim, String.class);
+            return claimsResolver.apply(claims);
         } catch (JwtException e) {
             log.info(e.getMessage());
+            return null;
         }
-        return "";
+    }
+
+    public boolean isBearerToken(String token) {
+        return token.startsWith("Bearer ");
+    }
+
+    public boolean isTokenExpired(String token) {
+        return this.getExpiration(token).before(new Date());
+    }
+
+    public boolean validateToken(String token, String name) {
+        return (this.getUserId(token).equals(name) && isTokenExpired(token));
     }
 }

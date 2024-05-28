@@ -32,22 +32,31 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        String token = request.getHeader(HttpHeaders.AUTHORIZATION);
+        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        if(token != null) {
-            if(jwtProvider.validateToken(token)) {
+        String token = null;
+        String username = null;
+
+        if(header != null && jwtProvider.isBearerToken(header)) {
+            token = header.substring(7);
+            username = jwtProvider.getUserId(token);
+        }
+
+        if(username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if(jwtProvider.validateToken(token, username)) {
+                UsernamePasswordAuthenticationToken UPToken = new UsernamePasswordAuthenticationToken(username, null, null);
                 Authentication authentication = createAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
-        } else {
-            response.setHeader("authorization", jwtProvider.createToken(repositoryService.createUser(), Role.GUEST.getRole()));
+        } else if(token == null) {
+            response.setHeader("Authorization", jwtProvider.createToken(repositoryService.createUser()));
         }
 
         filterChain.doFilter(request, response);
     }
 
     private Authentication createAuthentication(String token) {
-        String userId = jwtProvider.getClaim(token, "userId");
+        String userId = jwtProvider.getUserId(token);
         return new UsernamePasswordAuthenticationToken("userId", userId);
     }
 }
