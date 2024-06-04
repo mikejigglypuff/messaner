@@ -1,0 +1,81 @@
+[
+  {
+    "_id": "버터왕국",
+    "subscribers": [
+      {
+        "name": "user_126a1cd5-c91e-4553-8694-baa38ce4a70d",
+        "chats": []
+      },
+      {
+        "name": "erpin",
+        "chats": []
+      }
+    ],
+    "chats": []
+  },
+  {
+    "_id": "사료스탕스",
+    "subscribers": [
+      {
+        "name": "user_126a1cd5-c91e-4553-8694-baa38ce4a70d",
+        "chats": []
+      }
+    ],
+    "chats": []
+  },
+  {
+    "_id": "와구와구프린세스",
+    "subscribers": [
+      {
+        "name": "user_126a1cd5-c91e-4553-8694-baa38ce4a70d",
+        "chats": []
+      },
+      {
+        "name": "erpin",
+        "chats": [{
+          "writer": "erpin",
+          "message": "나는배가고프다",
+          "createdAt": {
+            "$date": "2024-05-21T23:17:43.927Z"
+          }
+        }]
+      },
+      {
+        "name": "komi",
+        "chats": [{
+          "writer": "komi",
+          "message": "인민들에게빵을착취하는사악한요정여왕몰아내자",
+          "createdAt": {
+            "$date": "2024-05-22T00:11:50.101Z"
+          }
+        }]
+      }
+    ],
+    "chats": [
+      {
+        "writer": "erpin",
+        "message": "나는배가고프다",
+        "createdAt": {
+          "$date": "2024-05-21T23:17:43.927Z"
+        }
+      },
+      {
+        "writer": "komi",
+        "message": "인민들에게빵을착취하는사악한요정여왕몰아내자",
+        "createdAt": {
+          "$date": "2024-05-22T00:11:50.101Z"
+        }
+      }
+    ]
+  },
+  {
+    "_id": "롤더체스",
+    "subscribers": [
+      {
+        "name": "user_126a1cd5-c91e-4553-8694-baa38ce4a70d",
+        "chats": []
+      }
+    ],
+    "chats": []
+  }
+]

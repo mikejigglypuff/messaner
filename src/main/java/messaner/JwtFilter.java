@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import messaner.DTO.UserDTO;
 import messaner.service.RepositoryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
+@Slf4j
 public class JwtFilter extends OncePerRequestFilter {
     private final RepositoryService repositoryService;
     private final JwtProvider jwtProvider;
@@ -33,6 +35,7 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+        log.info(String.valueOf("Authorization: " + header));
 
         String token = null;
         String username = null;
@@ -41,6 +44,8 @@ public class JwtFilter extends OncePerRequestFilter {
             token = header.substring(7);
             username = jwtProvider.getUserId(token);
         }
+
+        log.info("token: " + token + ", username: " + username);
 
         if(username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             if(jwtProvider.validateToken(token, username)) {

@@ -16,7 +16,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -24,31 +26,34 @@ import java.util.*;
 @Service
 public class RepositoryServiceImpl implements RepositoryService {
     private final MongoTemplate template;
-    private final ApplicationContext ac;
 
     @Autowired
     RepositoryServiceImpl(ApplicationContext ac) {
-        this.ac = ac;
         template = ac.getBean("mongoTemplate", MongoTemplate.class);
     }
 
     @Override
-    public boolean addChat(ChatDTO chatDTO, String user, LocalDateTime dateTime) {
+    @Transactional
+    public boolean addChat(ChatDTO chatDTO, String user, Instant dateTime) {
         UserDTO userDTO = new UserDTO(chatDTO.getRoom(), user);
         try {
             if(!roomExists(chatDTO.getRoom())) throw new NoSuchElementException();
 
             if(userSubscribed(userDTO)) {
-                LocalDateTime date = (dateTime != null) ? dateTime : LocalDateTime.now();
+                Instant date = (dateTime != null) ? dateTime : Instant.now();
                 Chat newChat = new Chat(chatDTO, user, date);
+
+                BulkOperations bulkOps = template.bulkOps(BulkOperations.BulkMode.UNORDERED, Room.class);
 
                 Query chatQuery = new Query(Criteria.where("name").is(chatDTO.getRoom()));
                 Update chatUpdate = new Update().push("chats", newChat);
-                template.updateFirst(chatQuery, chatUpdate, Room.class);
+                bulkOps.updateOne(chatQuery, chatUpdate);
 
                 Query subQuery = new Query(Criteria.where("subscribers").elemMatch(Criteria.where("name").is(user)));
                 Update subUpdate = new Update().push("subscribers.$.chats", newChat);
-                template.updateFirst(subQuery, subUpdate, Room.class);
+                bulkOps.updateOne(subQuery, subUpdate);
+
+                bulkOps.execute();
             }
             return true;
         } catch (Exception e) {
@@ -58,6 +63,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Override
+    @Transactional
     public boolean addSubscription(UserDTO userDTO) {
         try {
             if(!roomExists(userDTO.getRoom())) throw new NoSuchElementException();
@@ -73,13 +79,13 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Override
+    @Transactional
     public boolean createChannel(UserDTO userDTO) {
         try {
             List<User> users = new ArrayList<>();
             List<Chat> chats = new ArrayList<>();
             users.add(new User(userDTO, chats));
             template.insert(new Room(userDTO, users, chats));
-
             return true;
         } catch (Exception e) {
             log.error(e.getMessage()); //로깅 방식 변경할 것
@@ -88,6 +94,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Override
+    @Transactional
     public String createUser() {
         String uuid = "user_" + UUID.randomUUID().toString();
         while (userAlreadyExists(uuid)) {
@@ -97,6 +104,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Override
+    @Transactional
     public List<Chat> getChats(RoomDTO roomDTO) throws NoSuchElementException {
         Query query = new Query(Criteria.where("name").is(roomDTO.getRoom()));
         Room curRoom = template.findOne(query, Room.class);
@@ -107,6 +115,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     
 
     @Override
+    @Transactional
     public List<Room> getRooms(RoomDTO roomDTO) throws NoSuchElementException {
         Query query = new Query(Criteria.where("name").regex(roomDTO.getRoom(), null));
         query.with(Sort.by(Sort.Order.asc("_id")));
@@ -117,6 +126,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Override
+    @Transactional
     public boolean removeChannel(RoomDTO roomDTO) {
         Query query = new Query(Criteria.where("name").is(roomDTO.getRoom()));
         try {
@@ -129,14 +139,23 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Override
+    @Transactional
     public boolean removeSubscription(UserDTO userDTO) {
         try {
             if(!roomExists(userDTO.getRoom())) throw new NoSuchElementException();
 
-            Query query = new Query(
+            List<User> userList = getUserList(userDTO.getRoom());
+            if(userList.isEmpty()) throw new NoSuchElementException();
+
+            User removeUser = new User(userDTO);
+            userList.remove(removeUser);
+
+            Query removeQuery = new Query(
                 Criteria.where("subscribers").elemMatch(Criteria.where("name").is(userDTO.getUser()))
             );
-            template.remove(query, User.class);
+            Update update = new Update().set("subscribers", userList);
+            template.updateFirst(removeQuery, update, Room.class);
+
             return true;
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -145,6 +164,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Override
+    @Transactional
     public boolean userAlreadyExists(String user) {
         Query query = new Query(Criteria.where("subscribers").elemMatch(Criteria.where("name").is(user)));
         query.fields().include("name");
@@ -165,5 +185,17 @@ public class RepositoryServiceImpl implements RepositoryService {
     private boolean roomExists(String room) {
         Query query = new Query(Criteria.where("name").is(room));
         return template.exists(query, Room.class);
+    }
+
+    private List<User> getUserList(String room) {
+        Query query = new Query(
+                Criteria.where("_id").is(room)
+        );
+        query.fields().include("subscribers");
+
+        if(roomExists(room)) {
+            return template.findOne(query, Room.class).getSubscribers();
+        }
+        return new ArrayList<>();
     }
 }

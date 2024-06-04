@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "room")
+@Getter
 @RequiredArgsConstructor
 public class Room {
     @Id
@@ -25,15 +26,4 @@ public class Room {
         chats = chatList;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public List<User> getSubscribers() {
-        return subscribers;
-    }
-
-    public List<Chat> getChats() {
-        return chats;
-    }
 }

@@ -6,6 +6,7 @@ import messaner.DTO.UserDTO;
 import messaner.model.Chat;
 import messaner.model.Room;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -13,7 +14,7 @@ public interface RepositoryService {
     public List<Chat> getChats(RoomDTO roomDTO);
     public boolean createChannel(UserDTO userDTO);
     public boolean addSubscription(UserDTO userDTO);
-    public boolean addChat(ChatDTO chatDTO, String user, LocalDateTime dateTime);
+    public boolean addChat(ChatDTO chatDTO, String user, Instant dateTime);
     public List<Room> getRooms(RoomDTO roomDTO);
     public boolean removeSubscription(UserDTO userDTO);
     public boolean userAlreadyExists(String user);

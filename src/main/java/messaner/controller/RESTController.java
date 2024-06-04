@@ -1,12 +1,16 @@
 package messaner.controller;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import messaner.DTO.RoomDTO;
 import messaner.DTO.UserDTO;
+import messaner.GsonInstantAdapter;
 import messaner.JwtProvider;
+import messaner.factory.GsonFactory;
 import messaner.model.Chat;
 import messaner.model.Room;
 import messaner.service.RepositoryService;
@@ -18,15 +22,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.*;
 
+@Slf4j
 @Controller
-@RequestMapping("/api")
 public class RESTController {
     private final RepositoryService repositoryService;
+    private final GsonFactory gsonFactory;
 
     @Autowired
-    public RESTController(RepositoryService repositoryService) {
+    public RESTController(RepositoryService repositoryService, GsonFactory gsonFactory) {
+        this.gsonFactory = gsonFactory;
         this.repositoryService = repositoryService;
     }
 
@@ -49,11 +56,11 @@ public class RESTController {
     public String searchRooms(@RequestParam(value="name", required = false, defaultValue = "") String name) {
         try {
             List<Room> rooms = repositoryService.getRooms(new RoomDTO(name));
-            Gson gson = new Gson();
+            Gson gson = gsonFactory.instantGson();
             System.out.println(gson.toJson(rooms));
             return gson.toJson(rooms);
         } catch (NoSuchElementException ne) {
-            ne.printStackTrace();
+            log.info(ne.getMessage());
             return "no room matches";
         }
     }
@@ -69,7 +76,7 @@ public class RESTController {
             if (repositoryService.userSubscribed(userDTO)) {
                 List<Chat> chats = repositoryService.getChats(userDTO);
 
-                Gson gson = new Gson();
+                Gson gson = gsonFactory.instantGson();
                 return gson.toJson(chats);
             } else {
                 return "/topic/chatting/" + userDTO.getRoom();
@@ -78,8 +85,8 @@ public class RESTController {
         return "/";
     }
 
-    @GetMapping("")
-    public String Main() {
-        return "/index.html";
+    @GetMapping("/")
+    public String mainPage() {
+        return "/static/index.html";
     }
 }

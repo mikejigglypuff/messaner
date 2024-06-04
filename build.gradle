@@ -8,7 +8,8 @@ group = 'com.example'
 version = '0.0.1-SNAPSHOT'
 
 java {
-	sourceCompatibility = '17'
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 }
 
 configurations {
@@ -28,6 +29,7 @@ dependencies {
 	implementation 'org.springframework.security:spring-security-messaging'
 	implementation 'com.google.code.gson:gson:2.10.1'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.mongodb:mongodb-driver-sync'
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
 	implementation 'ch.qos.logback:logback-classic'
 	implementation 'org.slf4j:slf4j-api'
@@ -56,6 +58,10 @@ processResources { dependsOn "copyReactBuildFiles" }
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.compilerArgs << "-parameters"
 }
 
 tasks.register('installReact', Exec) {
