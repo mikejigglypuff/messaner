@@ -3,6 +3,7 @@ package messaner.controller;
 import lombok.RequiredArgsConstructor;
 import messaner.DTO.ChatDTO;
 import messaner.DTO.UserDTO;
+import messaner.JwtProvider;
 import messaner.service.RepositoryService;
 import org.springframework.messaging.handler.annotation.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -12,33 +13,27 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Controller
-@RequestMapping("/api")
 public class STOMPController {
 
     private final RepositoryService repositoryService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final JwtProvider jwtProvider;
 
-    @SubscribeMapping("/room/chatting/{room}")
-    public void subscribeRoom(@CookieValue("userId") Optional<String> cookie, @DestinationVariable String room) {
-        if(cookie.isPresent()) {
-            UserDTO userDTO = new UserDTO(room, cookie.get());
-            repositoryService.addSubscription(userDTO);
-        }
-    }
+    @MessageMapping("/chat/{room}")
+    public void sendChat(
+            @DestinationVariable String room,
+            @Header("simpSessionAttributes") Map<String, Object> sessionAttributes,
+            @Payload ChatDTO chatDTO
+    ) {
+        String sendUrl, sendMsg;
+        String token = (String) sessionAttributes.get("authToken");
 
-    @MessageMapping("/chat")
-    public void sendChat(@CookieValue("userId") Optional<String> cookie, @Payload ChatDTO chatDTO) {
-        if(cookie.isPresent()) {
-
-            String sendUrl, sendMsg;
-            String user = cookie.get();
+        if(token != null) {
+            String user = jwtProvider.getUserId(token);
 
             if (repositoryService.addChat(chatDTO, user, null)) {
                 sendUrl = "/topic/chat/" + chatDTO.getRoom();
@@ -49,7 +44,7 @@ public class STOMPController {
             }
 
             messagingTemplate.convertAndSendToUser(
-                user, sendUrl, sendMsg
+                    user, sendUrl, sendMsg
             );
         }
     }

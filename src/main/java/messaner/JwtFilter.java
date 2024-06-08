@@ -32,32 +32,42 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain
+    ) throws ServletException, IOException {
 
-        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
-        log.info(String.valueOf("Authorization: " + header));
+        if(!isWebSocketRequest(request)) {
+            String header = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        String token = null;
-        String username = null;
+            log.info("Authorization: " + header);
 
-        if(header != null && jwtProvider.isBearerToken(header)) {
-            token = header.substring(7);
-            username = jwtProvider.getUserId(token);
-        }
+            String token = null;
+            String username = null;
 
-        log.info("token: " + token + ", username: " + username);
-
-        if(username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            if(jwtProvider.validateToken(token, username)) {
-                UsernamePasswordAuthenticationToken UPToken = new UsernamePasswordAuthenticationToken(username, null, null);
-                Authentication authentication = createAuthentication(token);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+            if (header != null && jwtProvider.isBearerToken(header)) {
+                token = header.substring(7);
+                username = jwtProvider.getUserId(token);
             }
-        } else if(token == null) {
-            response.setHeader("Authorization", jwtProvider.createToken(repositoryService.createUser()));
+
+            log.info("token: " + token + ", username: " + username);
+
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                if (jwtProvider.validateToken(token, username)) {
+                    UsernamePasswordAuthenticationToken UPToken = new UsernamePasswordAuthenticationToken(username, null, null);
+                    Authentication authentication = createAuthentication(token);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+            } else if (token == null) {
+                response.setHeader("Authorization", jwtProvider.createToken(repositoryService.createUser()));
+            }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isWebSocketRequest(HttpServletRequest request) {
+
+        return request.getRequestURI().startsWith("/ws");
     }
 
     private Authentication createAuthentication(String token) {

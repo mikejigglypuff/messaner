@@ -39,11 +39,11 @@ public class RESTController {
 
     @PostMapping("/room/create")
     @ResponseBody
-    public String createRoom(@Payload RoomDTO roomDTO) {
+    public String createRoom(@RequestBody String room) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if(authentication.isAuthenticated()) {
-            UserDTO userDTO = new UserDTO(roomDTO.getRoom(), authentication.getCredentials().toString());
+            UserDTO userDTO = new UserDTO(room, authentication.getCredentials().toString());
             if (repositoryService.createChannel(userDTO)) {
                 return "/chatting/" + userDTO.getRoom();
             }
