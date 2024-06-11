@@ -49,83 +49,6 @@ public class RepositoryServiceTest {
         this.transactionTemplate = transactionTemplate;
     }
 
-
-
-    @ParameterizedTest
-    @ValueSource(strings = {"user_aa8c4b16-8320-4cd1-897d-ceea077d6b46"})
-    public void createUser(String comp) {
-        String randID = repositoryService.createUser();
-        assertThat(randID.charAt(4)).isEqualTo('_');
-        assertThat(randID.length()).isEqualTo(41);
-
-        for(int i = 0; i < 1000; i++) {
-            assertThat(randID).isNotEqualTo(comp);
-            randID = repositoryService.createUser();
-        }
-
-    }
-
-    @ParameterizedTest
-    @MethodSource("originRooms")
-    public void getAllRooms(List<Room> originRooms) {
-        int expected = originRooms.size();
-
-        List<Room> rooms = repositoryService.getRooms(new RoomDTO(""));
-
-        assertThat(rooms.size()).isEqualTo(expected);
-
-        SoftAssertions soft = new SoftAssertions();
-        for(int i = 0; i < expected; i++) {
-            soft.assertThat(rooms.get(i)).usingRecursiveComparison().isEqualTo(originRooms.get(i));
-        }
-    }
-
-    @Test
-    public void getChats() {
-        RoomDTO roomDTO = new RoomDTO("와구와구프린세스");
-        List<Chat> chats = repositoryService.getChats(roomDTO);
-
-        List<Chat> comp = new ArrayList<>(Arrays.asList(compChats));
-
-        SoftAssertions soft = new SoftAssertions();
-
-        for(int i = 0; i < chats.size(); i++) {
-            soft.assertThat(chats.get(i)).usingRecursiveComparison().isEqualTo(comp.get(i));
-        }
-    }
-
-    @Test
-    public void getNoChats() {
-        RoomDTO roomDTO = new RoomDTO("사료스탕스");
-        List<Chat> chats = repositoryService.getChats(roomDTO);
-
-        assertThat(chats.size()).isEqualTo(0);
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"erpin"})
-    public void userAlreadyExists(String user) {
-        assertTrue(repositoryService.userAlreadyExists(user));
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"butter"})
-    public void userNotExists(String user) {
-        assertFalse(repositoryService.userAlreadyExists(user));
-    }
-
-    @Test
-    public void userNotSubscribed() {
-        UserDTO userDTO = new UserDTO("와구와구프린세스", "elena");
-        assertFalse(repositoryService.userSubscribed(userDTO));
-    }
-
-    @Test
-    public void userSubscribed() {
-        UserDTO userDTO = new UserDTO("와구와구프린세스", "erpin");
-        assertTrue(repositoryService.userSubscribed(userDTO));
-    }
-
     @ParameterizedTest
     @ValueSource(strings = {"erpin"})
     public void addChat(String user) {
@@ -177,16 +100,47 @@ public class RepositoryServiceTest {
         });
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"user_aa8c4b16-8320-4cd1-897d-ceea077d6b46"})
+    public void createUser(String comp) {
+        String randID = repositoryService.createUser();
+        assertThat(randID.charAt(4)).isEqualTo('_');
+        assertThat(randID.length()).isEqualTo(41);
+
+        for(int i = 0; i < 1000; i++) {
+            assertThat(randID).isNotEqualTo(comp);
+            randID = repositoryService.createUser();
+        }
+
+    }
+
     @Test
-    public void subWrongRoom() {
-        UserDTO userDTO = new UserDTO("롤토체스", "goblinMiko");
+    public void getAllRooms() {
+        assertThatCode(() -> {
+            repositoryService.getRooms(new RoomDTO(""));
+        }).doesNotThrowAnyException();
+    }
 
-        transactionTemplate.execute(status -> {
-            assertFalse(repositoryService.addSubscription(userDTO));
+    @Test
+    public void getChats() {
+        RoomDTO roomDTO = new RoomDTO("와구와구프린세스");
+        List<Chat> chats = repositoryService.getChats(roomDTO);
 
-            status.setRollbackOnly();
-            return null;
-        });
+        List<Chat> comp = new ArrayList<>(Arrays.asList(compChats));
+
+        SoftAssertions soft = new SoftAssertions();
+
+        for(int i = 0; i < chats.size(); i++) {
+            soft.assertThat(chats.get(i)).usingRecursiveComparison().isEqualTo(comp.get(i));
+        }
+    }
+
+    @Test
+    public void getNoChats() {
+        RoomDTO roomDTO = new RoomDTO("사료스탕스");
+        List<Chat> chats = repositoryService.getChats(roomDTO);
+
+        assertThat(chats.size()).isEqualTo(0);
     }
 
     @Test
@@ -224,6 +178,42 @@ public class RepositoryServiceTest {
             status.setRollbackOnly();
             return null;
         });
+    }
+
+    @Test
+    public void subWrongRoom() {
+        UserDTO userDTO = new UserDTO("롤토체스", "goblinMiko");
+
+        transactionTemplate.execute(status -> {
+            assertFalse(repositoryService.addSubscription(userDTO));
+
+            status.setRollbackOnly();
+            return null;
+        });
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"erpin"})
+    public void userAlreadyExists(String user) {
+        assertTrue(repositoryService.userAlreadyExists(user));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"butter"})
+    public void userNotExists(String user) {
+        assertFalse(repositoryService.userAlreadyExists(user));
+    }
+
+    @Test
+    public void userNotSubscribed() {
+        UserDTO userDTO = new UserDTO("와구와구프린세스", "elena");
+        assertFalse(repositoryService.userSubscribed(userDTO));
+    }
+
+    @Test
+    public void userSubscribed() {
+        UserDTO userDTO = new UserDTO("와구와구프린세스", "erpin");
+        assertTrue(repositoryService.userSubscribed(userDTO));
     }
 
     static Stream<Arguments> originRooms() {

@@ -87,6 +87,6 @@ public class RESTController {
 
     @GetMapping("/")
     public String mainPage() {
-        return "/static/index.html";
+        return "/index.html";
     }
 }
