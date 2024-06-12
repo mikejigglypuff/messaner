@@ -6,6 +6,7 @@ import { Client } from "@stomp/stompjs";
 const defaultURL = process.env.REACT_APP_DEFAULT_URL;
 const stompURL = process.env.REACT_APP_STOMP_URL;
 
+
 axios.interceptors.request.use(config => {
     const token = localStorage.getItem("token");
     if(token) {
@@ -14,6 +15,7 @@ axios.interceptors.request.use(config => {
 
     return config;
 }, err => {
+    console.error(err);
     return Promise.reject(err);
 });
 
@@ -22,10 +24,13 @@ axios.interceptors.response.use(res => {
     if(token) {
         localStorage.setItem("token", token);
     }
-    
+
+    return res;
 }, err => {
+    console.error(err);
     return Promise.reject(err);
 });
+
 
 function App() {
     const [roomList, setRoomList] = useState([]);
@@ -45,7 +50,7 @@ function App() {
     const connect = (url) => {
         setRoomName(url);
         client.current = new Client({
-            webSocketFactory: () => { return new SockJS(`http://${defaultURL}/ws`) },
+            webSocketFactory: () => { return new SockJS(`${defaultURL}/ws`) },
             onConnect: () => {
                 client.current.subscribe(`/topic/${url}`, res => {
                     console.log("접속 완료");
@@ -91,7 +96,7 @@ function App() {
     const getSession = async () => {
         await axios({
             method: "get",
-            url: "/",
+            url: defaultURL,
             withCredentials: true,
         });
 
@@ -100,17 +105,21 @@ function App() {
 
     const getRooms = async () => {
         const url = (roomName) ? `?name=${roomName}` : "";
-        const rooms = await axios.get(`/rooms${url}`);
+        const rooms = await axios({
+            method: "get",
+            url: `${defaultURL}/rooms${url}`,
+            withCredentials: true
+        });
+
         console.log(rooms);
-        const roomJSON = JSON.parse(rooms.data);
-        setRoomList(roomJSON);
+        setRoomList(rooms.data);
     }
 
     const createChannel = async () => {
         if(roomName) {
             const callbackUrl = await axios({
                 method: "post",
-                url: `/room/create`,
+                url: `${defaultURL}/room/create`,
                 withCredentials: true,
                 body: {
                     room: roomName
@@ -128,7 +137,7 @@ function App() {
     const getChat = async (url) => {
         const chat = await axios({
             method: "get",
-            url: `/room/chatting${url}`,
+            url: `${defaultURL}/room/chatting${url}`,
         });
         setChatting(chat.data);
         console.log(chat);
