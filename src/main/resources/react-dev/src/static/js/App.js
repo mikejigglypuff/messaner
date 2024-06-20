@@ -50,7 +50,7 @@ function App() {
     const connect = (url) => {
         setRoomName(url);
         client.current = new Client({
-            webSocketFactory: () => { return new SockJS(`${defaultURL}/ws`) },
+            webSocketFactory: () => { return new SockJS("/ws") },
             onConnect: () => {
                 client.current.subscribe(`/topic/${url}`, res => {
                     console.log("접속 완료");
