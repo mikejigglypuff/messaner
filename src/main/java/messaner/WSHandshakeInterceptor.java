@@ -29,6 +29,7 @@ public class WSHandshakeInterceptor implements HandshakeInterceptor {
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
 
+        log.info(request.getHeaders().toString());
         String authorization = request.getHeaders().getFirst("Authorization");
 
         log.info(authorization);

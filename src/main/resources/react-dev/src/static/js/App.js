@@ -6,7 +6,6 @@ import { Client } from "@stomp/stompjs";
 const defaultURL = process.env.REACT_APP_DEFAULT_URL;
 const stompURL = process.env.REACT_APP_STOMP_URL;
 
-
 axios.interceptors.request.use(config => {
     const token = localStorage.getItem("token");
     if(token) {
@@ -49,24 +48,58 @@ function App() {
 
     const connect = (url) => {
         setRoomName(url);
-        client.current = new Client({
-            webSocketFactory: () => { return new SockJS("/ws") },
-            onConnect: () => {
-                client.current.subscribe(`/topic/${url}`, res => {
+        const token = localStorage.getItem("token");
+        if(token) {
+            const stompClient = new Client({
+                webSocketFactory: () => new SockJS("http://localhost:8080/ws", null, {
+                    transports: ["websocket", "xhr-streaming", "xhr-polling"]
+                }),
+                connectHeaders: {
+                    "Authorization" : token
+                },
+                reconnectDelay: 5000,
+                heartbeat: {
+                    incoming: 4000,
+                    outgoing: 4000
+                },
+                onConnect: frame => {
+                    console.log(frame);
+
+                    const originalSubscribe = stompClient.subscribe;
+                    const originalPublish = stompClient.publish;
+                    
+                    stompClient.subscribe((destination, callback, headers = {}) => {
+                        const customHeaders = {
+                            "Authorization": token,
+                            ...headers,
+                        };
+
+                        return originalSubscribe.call(stompClient, destination, callback, customHeaders);
+
+                    }); //a에 구독
+
+                    stompClient.publish = ({ destination, body, headers = {} }) => {
+                        // 자동으로 헤더 추가
+                        const customHeaders = {
+                          'custom-header': 'custom-value',
+                          ...headers,
+                        };
+                        return originalPublish.call(stompClient, { destination, body, headers: customHeaders });
+                      };
+
                     console.log("접속 완료");
                     getChat(url);
-                }); //a에 구독
-            },
-            reconnectDelay: 5000,
-            heartbeat: {
-                incoming: 4000,
-                outgoing: 4000
-            },
+                },
+                onStompError: frame => {
+                    console.log(`reported error: ${frame.headers["message"]}`);
+                    console.log(`error detail: ${frame.body}`)
+                }
+            });
 
-        });
-
-        client.current.activate();
-        console.log(client.current);
+            client.current = stompClient;
+            client.current.activate();
+            console.log(client.current);
+        }
     }
 
     const sendChat = async () => {
