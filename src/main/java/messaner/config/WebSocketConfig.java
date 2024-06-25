@@ -26,20 +26,18 @@ import java.util.List;
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
-    private final HandshakeInterceptor handshakeInterceptor;
     private final ChannelInterceptor channelInterceptor;
 
     @Autowired
-    public WebSocketConfig(HandshakeInterceptor handshakeInterceptor, ChannelInterceptor channelInterceptor) {
-        this.handshakeInterceptor = handshakeInterceptor;
+    public WebSocketConfig(ChannelInterceptor channelInterceptor) {
         this.channelInterceptor = channelInterceptor;
     }
+
+    //WebSocket 연결 엔드포인트
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws").setAllowedOriginPatterns("*")
-                .addInterceptors(handshakeInterceptor).withSockJS();
-                //WebSocket 연결 엔드포인트
-        //registry.setPreserveReceiveOrder(true);
+        registry.addEndpoint("/ws").setAllowedOriginPatterns("*");
+        registry.addEndpoint("/sockjs").setAllowedOriginPatterns("*").withSockJS();
     }
 
     @Override
@@ -50,6 +48,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(channelInterceptor);//인터셉터 추가하기
+        registration.interceptors(channelInterceptor);
     }
 }

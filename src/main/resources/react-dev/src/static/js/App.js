@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import SockJS from "sockjs-client";
 import axios from "axios";
 import { Client } from "@stomp/stompjs";
@@ -30,7 +30,6 @@ axios.interceptors.response.use(res => {
     return Promise.reject(err);
 });
 
-
 function App() {
     const [roomList, setRoomList] = useState([]);
     const [roomName, setRoomName] = useState("");
@@ -46,14 +45,13 @@ function App() {
         }
     }, []);
 
-    const connect = (url) => {
+    const connect = useCallback(() => {
+        const url = "와구와구프린세스";
         setRoomName(url);
         const token = localStorage.getItem("token");
         if(token) {
             const stompClient = new Client({
-                webSocketFactory: () => new SockJS("http://localhost:8080/ws", null, {
-                    transports: ["websocket", "xhr-streaming", "xhr-polling"]
-                }),
+                webSocketFactory: wsFactory(),
                 connectHeaders: {
                     "Authorization" : token
                 },
@@ -68,7 +66,7 @@ function App() {
                     const originalSubscribe = stompClient.subscribe;
                     const originalPublish = stompClient.publish;
                     
-                    stompClient.subscribe((destination, callback, headers = {}) => {
+                    stompClient.subscribe(`/topic/${url}`, (destination, callback, headers = {}) => {
                         const customHeaders = {
                             "Authorization": token,
                             ...headers,
@@ -78,21 +76,12 @@ function App() {
 
                     }); //a에 구독
 
-                    stompClient.publish = ({ destination, body, headers = {} }) => {
-                        // 자동으로 헤더 추가
-                        const customHeaders = {
-                          'custom-header': 'custom-value',
-                          ...headers,
-                        };
-                        return originalPublish.call(stompClient, { destination, body, headers: customHeaders });
-                      };
-
                     console.log("접속 완료");
                     getChat(url);
                 },
                 onStompError: frame => {
                     console.log(`reported error: ${frame.headers["message"]}`);
-                    console.log(`error detail: ${frame.body}`)
+                    console.log(`error detail: ${frame.body}`);
                 }
             });
 
@@ -100,19 +89,20 @@ function App() {
             client.current.activate();
             console.log(client.current);
         }
-    }
+    }, []);
 
     const sendChat = async () => {
         if(client.current && message) {
             client.current.publish({
-                destination: "/pub/chat", 
+                destination: "/pub/chat",
+                headers: {
+                    "Authorization": localStorage.getItem("token")
+                },
                 body: JSON.stringify({
                     room: roomName,
                     chat: message
                 })
             });
-
-            setMessage("");
         }
     }
 
@@ -185,6 +175,15 @@ function App() {
         setRoomName(e.target.value);
     }
 
+    const wsFactory = () => {
+        if("WebSocket" in window) {
+            const ws = new WebSocket(`${stompURL}/ws`);
+            ws.binaryType = "arraybuffer";
+            return ws;
+        } else {
+            return new SockJS(`${defaultURL}/sockjs`)
+        }
+    }
 
     return (client.current) ? <div className="chatRoom">
             <div className="chatRoomHeader">
@@ -223,7 +222,7 @@ function App() {
                     </div>
                     <div className="roomList">
                         { Object.values(roomList).map(val => (
-                            <label onClick={() => connect(val.name)}>
+                            <label onClick={connect}>
                                 <div className="roomInfo" key={val.name}>
                                     <div className="roomName">{val.name}</div>
                                     <div className="roomMember">

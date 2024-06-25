@@ -17,7 +17,6 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 import java.util.Map;
 
 @Slf4j
-@Component
 public class WSHandshakeInterceptor implements HandshakeInterceptor {
     private final JwtProvider jwtProvider;
     
@@ -36,14 +35,10 @@ public class WSHandshakeInterceptor implements HandshakeInterceptor {
         if(authorization != null && jwtProvider.isBearerToken(authorization)) {
             String token = authorization.substring(7);
             String name = jwtProvider.getUserId(token);
-            if(!jwtProvider.validateToken(token, name)) {
-                throw new IllegalArgumentException("Invalid Authorization token");
-            }
+            return jwtProvider.validateToken(token, name);
         } else {
-            throw new IllegalArgumentException("No Bearer Authorization token");
+            return false;
         }
-
-        return true;
     }
 
     @Override

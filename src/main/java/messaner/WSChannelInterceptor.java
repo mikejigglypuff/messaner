@@ -1,5 +1,6 @@
 package messaner;
 
+import lombok.extern.slf4j.Slf4j;
 import messaner.DTO.UserDTO;
 import messaner.service.RepositoryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class WSChannelInterceptor implements ChannelInterceptor {
     private final RepositoryService repositoryService;
     private final JwtProvider jwtProvider;
@@ -26,8 +28,10 @@ public class WSChannelInterceptor implements ChannelInterceptor {
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor =
                 MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-        if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+        StompCommand command = accessor.getCommand();
+        if (StompCommand.SUBSCRIBE.equals(command) || StompCommand.CONNECT.equals(command)) {
             String token = accessor.getFirstNativeHeader("Authorization");
+            log.info(token);
             if(token != null) {
                 repositoryService.addSubscription(
                     new UserDTO(accessor.getDestination(), jwtProvider.getUserId(token))
