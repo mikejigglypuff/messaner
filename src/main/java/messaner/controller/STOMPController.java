@@ -50,7 +50,7 @@ public class STOMPController {
     }
 
     @MessageMapping("/unsubscribe/{room}")
-    public void unsubscribeRoom(@CookieValue("userId") Optional<String> cookie, @DestinationVariable String room) {
+    public void unsubscribeRoom(@CookieValue("userId") Optional<String> cookie, @DestinationVariable("room") String room) {
         if(cookie.isPresent()) {
             UserDTO userDTO = new UserDTO(room, cookie.get());
             repositoryService.removeSubscription(userDTO);

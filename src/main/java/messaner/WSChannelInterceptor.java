@@ -29,10 +29,11 @@ public class WSChannelInterceptor implements ChannelInterceptor {
         StompHeaderAccessor accessor =
                 MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         StompCommand command = accessor.getCommand();
-        if (StompCommand.SUBSCRIBE.equals(command) || StompCommand.CONNECT.equals(command)) {
+        if (StompCommand.SUBSCRIBE.equals(command)) {
             String token = accessor.getFirstNativeHeader("Authorization");
-            log.info(token);
+            log.info("Message token: " + token);
             if(token != null) {
+                log.info("Message destination: " + accessor.getDestination());
                 repositoryService.addSubscription(
                     new UserDTO(accessor.getDestination(), jwtProvider.getUserId(token))
                 );
@@ -42,4 +43,6 @@ public class WSChannelInterceptor implements ChannelInterceptor {
         }
         return message;
     }
+
+
 }

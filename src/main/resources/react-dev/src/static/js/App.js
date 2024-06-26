@@ -22,6 +22,7 @@ axios.interceptors.response.use(res => {
     const token = res.headers.getAuthorization();
     if(token) {
         localStorage.setItem("token", token);
+        console.log(token);
     }
 
     return res;
@@ -37,106 +38,16 @@ function App() {
     const [chatting, setChatting] = useState([]);
     const client = useRef(null);
 
-    useEffect(() => {
-        if(!client.current) {
-            getSession();
-        } else {
-            getChat();
-        }
-    }, []);
-
     const connect = useCallback(() => {
         const url = "와구와구프린세스";
         setRoomName(url);
         const token = localStorage.getItem("token");
         if(token) {
-            const stompClient = new Client({
-                webSocketFactory: wsFactory(),
-                connectHeaders: {
-                    "Authorization" : token
-                },
-                reconnectDelay: 5000,
-                heartbeat: {
-                    incoming: 4000,
-                    outgoing: 4000
-                },
-                onConnect: frame => {
-                    console.log(frame);
-
-                    const originalSubscribe = stompClient.subscribe;
-                    const originalPublish = stompClient.publish;
-                    
-                    stompClient.subscribe(`/topic/${url}`, (destination, callback, headers = {}) => {
-                        const customHeaders = {
-                            "Authorization": token,
-                            ...headers,
-                        };
-
-                        return originalSubscribe.call(stompClient, destination, callback, customHeaders);
-
-                    }); //a에 구독
-
-                    console.log("접속 완료");
-                    getChat(url);
-                },
-                onStompError: frame => {
-                    console.log(`reported error: ${frame.headers["message"]}`);
-                    console.log(`error detail: ${frame.body}`);
-                }
-            });
-
-            client.current = stompClient;
+            client.current = stompFactory(token, url);
             client.current.activate();
             console.log(client.current);
         }
     }, []);
-
-    const sendChat = async () => {
-        if(client.current && message) {
-            client.current.publish({
-                destination: "/pub/chat",
-                headers: {
-                    "Authorization": localStorage.getItem("token")
-                },
-                body: JSON.stringify({
-                    room: roomName,
-                    chat: message
-                })
-            });
-        }
-    }
-
-    const disconnect = () => {
-        if(client.current) {
-            client.current.deactivate();
-            setChatting([]);
-            setMessage("");
-            setRoomName("/");
-            client.current = null;
-        }
-    }
-
-    const getSession = async () => {
-        await axios({
-            method: "get",
-            url: defaultURL,
-            withCredentials: true,
-        });
-
-        getRooms();
-    }
-
-    const getRooms = async () => {
-        const url = (roomName) ? `?name=${roomName}` : "";
-        const rooms = await axios({
-            method: "get",
-            url: `${defaultURL}/rooms${url}`,
-            withCredentials: true
-        });
-
-        console.log(rooms);
-        setRoomList(rooms.data);
-    }
 
     const createChannel = async () => {
         if(roomName) {
@@ -157,14 +68,108 @@ function App() {
         }
     }
 
+    const disconnect = () => {
+        if(client.current) {
+            client.current.deactivate();
+            setChatting([]);
+            setMessage("");
+            setRoomName("/");
+            client.current = null;
+        }
+    }
+
     const getChat = async (url) => {
         const chat = await axios({
             method: "get",
-            url: `${defaultURL}/room/chatting${url}`,
+            url: `${defaultURL}/chats?name=${url}`,
         });
+
+        if(chat.data === "/topic/chatting/") {
+
+        }
         setChatting(chat.data);
         console.log(chat);
-        
+    }
+
+    const getRooms = async () => {
+        const url = (roomName) ? `?name=${roomName}` : "";
+        const rooms = await axios({
+            method: "get",
+            url: `${defaultURL}/rooms${url}`,
+            withCredentials: true
+        });
+
+        console.log(rooms);
+        setRoomList(rooms.data);
+    }
+
+    const getSession = async () => {
+        await axios({
+            method: "get",
+            url: defaultURL,
+            withCredentials: true,
+        });
+
+        getRooms();
+    }
+
+    const sendChat = async () => {
+        if(client.current && message) {
+            client.current.publish({
+                destination: "/pub/chat",
+                headers: {
+                    "Authorization": localStorage.getItem("token")
+                },
+                body: JSON.stringify({
+                    room: roomName,
+                    chat: message
+                })
+            });
+        }
+    }
+
+    const stompFactory = (token, url) => {
+        const client = new Client({
+            connectHeaders: {
+                "Authorization" : token
+            },
+            reconnectDelay: 5000,
+            heartbeat: {
+                incoming: 4000,
+                outgoing: 4000
+            },
+            onConnect: frame => {
+                console.log(frame);
+
+                const originalSubscribe = client.subscribe;
+                const originalPublish = client.publish;
+
+                client.subscribe(`/topic/${url}`, (destination, callback, headers = {}) => {
+                    const customHeaders = {
+                        "Authorization": token,
+                        ...headers,
+                    };
+                    console.log("접속 완료");
+
+                    return originalSubscribe.call(client, destination, callback, customHeaders);
+
+                }); //a에 구독
+
+                getChat(url);
+            },
+            onStompError: frame => {
+                console.log(`reported error: ${frame.headers["message"]}`);
+                console.log(`error detail: ${frame.body}`);
+            }
+        });
+
+        if("WebSocket" in window) {
+            client.brokerURL = `${stompURL}/ws`;
+        } else {
+            client.webSocketFactory = () => { new SockJS(`${defaultURL}/sockjs`) }
+        }
+
+        return client;
     }
 
     const typeMessage = e => {
@@ -175,15 +180,13 @@ function App() {
         setRoomName(e.target.value);
     }
 
-    const wsFactory = () => {
-        if("WebSocket" in window) {
-            const ws = new WebSocket(`${stompURL}/ws`);
-            ws.binaryType = "arraybuffer";
-            return ws;
+    useEffect(() => {
+        if(!client.current) {
+            getSession();
         } else {
-            return new SockJS(`${defaultURL}/sockjs`)
+            getChat();
         }
-    }
+    }, []);
 
     return (client.current) ? <div className="chatRoom">
             <div className="chatRoomHeader">
@@ -192,7 +195,7 @@ function App() {
                 </button>
                 <div className="chatRoomName">{roomName}</div>
             </div>
-            { chatting.map(chat => (
+            { Object.values(chatting).map(chat => (
                 <div className="chatRoomBody">
                     <div className="chatInfo">
                         <div>JW</div>

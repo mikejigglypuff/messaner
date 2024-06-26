@@ -51,24 +51,10 @@ public class RESTController {
         return "채널 생성 실패";
     }
 
-    @GetMapping("/rooms")
-    @ResponseBody
-    public String searchRooms(@RequestParam(value="name", required = false, defaultValue = "") String name) {
-        try {
-            List<Room> rooms = repositoryService.getRooms(new RoomDTO(name));
-            Gson gson = gsonFactory.instantGson();
-            System.out.println(gson.toJson(rooms));
-            return gson.toJson(rooms);
-        } catch (NoSuchElementException ne) {
-            log.info(ne.getMessage());
-            return "no room matches";
-        }
-    }
-
     //구독 이후 접속
-    @GetMapping("/room/chatting/{room}")
+    @GetMapping("/chats")
     @ResponseBody
-    public String getChats(@PathVariable String room) {
+    public String getChats(@RequestParam(value="room", required = false, defaultValue = "") String room) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if(authentication.isAuthenticated()) {
@@ -83,6 +69,20 @@ public class RESTController {
             }
         }
         return "/";
+    }
+
+    @GetMapping("/rooms")
+    @ResponseBody
+    public String searchRooms(@RequestParam(value="name", required = false, defaultValue = "") String name) {
+        try {
+            List<Room> rooms = repositoryService.getRooms(new RoomDTO(name));
+            Gson gson = gsonFactory.instantGson();
+            System.out.println(gson.toJson(rooms));
+            return gson.toJson(rooms);
+        } catch (NoSuchElementException ne) {
+            log.info(ne.getMessage());
+            return "no room matches";
+        }
     }
 
     @GetMapping("/")
