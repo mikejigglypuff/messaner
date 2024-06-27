@@ -16,6 +16,7 @@ import messaner.model.Room;
 import messaner.service.RepositoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -54,11 +55,14 @@ public class RESTController {
     //구독 이후 접속
     @GetMapping("/chats")
     @ResponseBody
-    public String getChats(@RequestParam(value="room", required = false, defaultValue = "") String room) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    public String getChats(
+            @RequestParam(value="room", required = false, defaultValue = "") String room,
+            StompHeaderAccessor session
+    ) {
+        String user = (String) session.getSessionAttributes().get("authToken");
 
-        if(authentication.isAuthenticated()) {
-            UserDTO userDTO = new UserDTO(room, authentication.getCredentials().toString());
+        if(user != null) {
+            UserDTO userDTO = new UserDTO(room, user);
             if (repositoryService.userSubscribed(userDTO)) {
                 List<Chat> chats = repositoryService.getChats(userDTO);
 

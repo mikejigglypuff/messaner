@@ -141,18 +141,10 @@ function App() {
             onConnect: frame => {
                 console.log(frame);
 
-                const originalSubscribe = client.subscribe;
-                const originalPublish = client.publish;
-
-                client.subscribe(`/topic/${url}`, (destination, callback, headers = {}) => {
-                    const customHeaders = {
-                        "Authorization": token,
-                        ...headers,
-                    };
-                    console.log("접속 완료");
-
-                    return originalSubscribe.call(client, destination, callback, customHeaders);
-
+                client.subscribe(`/topic/${url}`, message => {
+                    console.log(message);
+                }, {
+                    "Authorization": token
                 }); //a에 구독
 
                 getChat(url);

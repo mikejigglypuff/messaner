@@ -29,15 +29,21 @@ public class WSChannelInterceptor implements ChannelInterceptor {
         StompHeaderAccessor accessor =
                 MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
         StompCommand command = accessor.getCommand();
-        if (StompCommand.SUBSCRIBE.equals(command)) {
+        if(StompCommand.SUBSCRIBE.equals(command)) {
             String token = accessor.getFirstNativeHeader("Authorization");
             log.info("Message token: " + token);
             if(token != null) {
-                log.info("Message destination: " + accessor.getDestination());
-                repositoryService.addSubscription(
-                    new UserDTO(accessor.getDestination(), jwtProvider.getUserId(token))
-                );
-                accessor.getSessionAttributes().put("authToken", token);
+                String dest = accessor.getDestination();
+
+                assert dest != null;
+                String[] uri = dest.split("/");
+                log.info("Message destination: " + uri[uri.length - 1]);
+
+                String user = jwtProvider.getUserId(token);
+
+                repositoryService.addSubscription(new UserDTO(uri[uri.length - 1], user));
+
+                accessor.getSessionAttributes().put("authToken", user);
             }
 
         }
