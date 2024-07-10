@@ -4,11 +4,13 @@ import lombok.RequiredArgsConstructor;
 import messaner.DTO.ChatDTO;
 import messaner.DTO.UserDTO;
 import messaner.JwtProvider;
+import messaner.WSChannelInterceptor;
 import messaner.service.RepositoryService;
 import org.springframework.messaging.handler.annotation.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -22,15 +24,16 @@ public class STOMPController {
     private final RepositoryService repositoryService;
     private final SimpMessagingTemplate messagingTemplate;
     private final JwtProvider jwtProvider;
+    private final WSChannelInterceptor channelInterceptor;
 
     @MessageMapping("/chat/{room}")
     public void sendChat(
             @DestinationVariable String room,
-            @Header("simpSessionAttributes") Map<String, Object> sessionAttributes,
-            @Payload ChatDTO chatDTO
+            @Payload ChatDTO chatDTO,
+            StompHeaderAccessor headerAccessor
     ) {
         String sendUrl, sendMsg;
-        String token = (String) sessionAttributes.get("authToken");
+        String token = channelInterceptor.getSession(headerAccessor.getSessionId());
 
         if(token != null) {
             String user = jwtProvider.getUserId(token);

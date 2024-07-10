@@ -10,12 +10,14 @@ import messaner.DTO.RoomDTO;
 import messaner.DTO.UserDTO;
 import messaner.GsonInstantAdapter;
 import messaner.JwtProvider;
+import messaner.WSChannelInterceptor;
 import messaner.factory.GsonFactory;
 import messaner.model.Chat;
 import messaner.model.Room;
 import messaner.service.RepositoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -31,11 +33,17 @@ import java.util.*;
 public class RESTController {
     private final RepositoryService repositoryService;
     private final GsonFactory gsonFactory;
+    private final WSChannelInterceptor channelInterceptor;
 
     @Autowired
-    public RESTController(RepositoryService repositoryService, GsonFactory gsonFactory) {
+    public RESTController(
+            RepositoryService repositoryService,
+            GsonFactory gsonFactory,
+            WSChannelInterceptor channelInterceptor
+    ) {
         this.gsonFactory = gsonFactory;
         this.repositoryService = repositoryService;
+        this.channelInterceptor = channelInterceptor;
     }
 
     @PostMapping("/room/create")
@@ -57,12 +65,13 @@ public class RESTController {
     @ResponseBody
     public String getChats(
             @RequestParam(value="room", required = false, defaultValue = "") String room,
-            StompHeaderAccessor session
+            @RequestParam(value="sessionId") String sessionId
     ) {
-        String user = (String) session.getSessionAttributes().get("authToken");
+        String session = channelInterceptor.getSession(sessionId);
+        log.info("sessionID: " + session);
 
-        if(user != null) {
-            UserDTO userDTO = new UserDTO(room, user);
+        if(session != null) {
+            UserDTO userDTO = new UserDTO(room, session);
             if (repositoryService.userSubscribed(userDTO)) {
                 List<Chat> chats = repositoryService.getChats(userDTO);
 

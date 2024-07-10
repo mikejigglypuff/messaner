@@ -72,14 +72,17 @@ public class JwtProvider {
     }
 
     private <T>T getClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = getAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    private Claims getAllClaims(String token) {
         try {
-            Claims claims = Jwts.parser()
+            return Jwts.parser()
                     .verifyWith(secretKey)
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
-
-            return claimsResolver.apply(claims);
         } catch (JwtException e) {
             log.info(e.getMessage());
             return null;
