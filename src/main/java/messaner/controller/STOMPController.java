@@ -1,6 +1,7 @@
 package messaner.controller;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import messaner.DTO.ChatDTO;
 import messaner.DTO.UserDTO;
 import messaner.JwtProvider;
@@ -19,6 +20,7 @@ import java.util.*;
 
 @RequiredArgsConstructor
 @Controller
+@Slf4j
 public class STOMPController {
 
     private final RepositoryService repositoryService;
@@ -30,13 +32,14 @@ public class STOMPController {
     public void sendChat(
             @DestinationVariable String room,
             @Payload ChatDTO chatDTO,
-            StompHeaderAccessor headerAccessor
+            @RequestParam(value="sessionId") String sessionId
     ) {
         String sendUrl, sendMsg;
-        String token = channelInterceptor.getSession(headerAccessor.getSessionId());
+        String session = channelInterceptor.getSession(sessionId);
+        log.info("sessionID: " + session);
 
-        if(token != null) {
-            String user = jwtProvider.getUserId(token);
+        if(session != null) {
+            String user = jwtProvider.getUserId(session);
 
             if (repositoryService.addChat(chatDTO, user, null)) {
                 sendUrl = "/topic/chat/" + chatDTO.getRoom();

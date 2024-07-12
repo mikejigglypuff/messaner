@@ -23,6 +23,8 @@ axios.interceptors.response.use(res => {
     if(token) {
         localStorage.setItem("token", token);
         console.log(token);
+
+        localStorage.setItem("sessionId", genSessionID());
     }
 
     return res;
@@ -81,7 +83,7 @@ function App() {
     const getChat = async (url) => {
         const chat = await axios({
             method: "get",
-            url: `${defaultURL}/chats?name=${url}`,
+            url: `${defaultURL}/chats?name=${url}&sessionId=${getSessionID()}`,
         });
 
         if(chat.data === "/topic/chatting/") {
@@ -95,7 +97,7 @@ function App() {
         const url = (roomName) ? `?name=${roomName}` : "";
         const rooms = await axios({
             method: "get",
-            url: `${defaultURL}/rooms${url}`,
+            url: `${defaultURL}/rooms/${url}`,
             withCredentials: true
         });
 
@@ -116,7 +118,7 @@ function App() {
     const sendChat = async () => {
         if(client.current && message) {
             client.current.publish({
-                destination: "/pub/chat",
+                destination: `/pub/chat?sessionId=${getSessionID()}`,
                 headers: {
                     "Authorization": localStorage.getItem("token")
                 },
@@ -289,6 +291,22 @@ function ArrowLeftIcon(props) {
       <path d="M19 12H5" />
     </svg>
   )
+}
+
+const genRandString = (length) => {
+    return Math.random().toString(length);
+}
+
+const genSessionID = () => {
+    return genRandString(8) + "-" + genRandString(4) + "-" + genRandString(4) + 
+        + "-" + genRandString(4) + "-" + genRandString(12);
+}
+
+const getSessionID = () => {
+    if(!localStorage.getItem("sessionId")) {
+        localStorage.setItem("sessionId", genSessionID());
+    }
+    return localStorage.getItem("sessionId");
 }
 
 export default App;
