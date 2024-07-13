@@ -6,6 +6,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import messaner.service.RepositoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,24 +26,30 @@ public class JwtProvider {
     private final String secret;
     private final SecretKey secretKey;
     private final long expireTime;
+    private final RepositoryService repositoryService;
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    public JwtProvider(@Value("${spring.jwt.secret}") String secret, @Value("${spring.jwt.expireTime}") long expireTime) {
+    public JwtProvider(
+            @Value("${spring.jwt.secret}") String secret,
+            @Value("${spring.jwt.expireTime}") long expireTime,
+            RepositoryService repositoryService
+    ) {
         this.secret = secret;
         this.expireTime = expireTime;
         String keyBase64Encoded = Base64.getEncoder().encodeToString(secret.getBytes());
         this.secretKey = Keys.hmacShaKeyFor(keyBase64Encoded.getBytes());
+        this.repositoryService = repositoryService;
     }
 
-    public String createToken(String user) {
+    public String createToken() {
         ZonedDateTime now = ZonedDateTime.now();
         ZonedDateTime tokenExp = now.plusSeconds(expireTime);
 
-        return "Bearer " + Jwts.builder()
+        return Jwts.builder()
                 .issuedAt(Date.from(now.toInstant()))
                 .expiration(Date.from(tokenExp.toInstant()))
-                .subject(user)
+                .subject(repositoryService.createUser())
                 .signWith(secretKey)
                 .compact();
     }
@@ -85,12 +92,10 @@ public class JwtProvider {
                     .getPayload();
         } catch (JwtException e) {
             log.info(e.getMessage());
-            return null;
-        }
-    }
 
-    public boolean isBearerToken(String token) {
-        return token.startsWith("Bearer ");
+            String newToken = createToken();
+            return getAllClaims(newToken);
+        }
     }
 
     public boolean isTokenExpired(String token) {

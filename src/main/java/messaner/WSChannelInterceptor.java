@@ -10,6 +10,7 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
@@ -48,12 +49,17 @@ public class WSChannelInterceptor implements ChannelInterceptor {
                 String[] uri = dest.split("/");
                 log.info("Message destination: " + uri[uri.length - 1]);
 
-                String user = jwtProvider.getUserId(token.substring(7));
-
+                String user = jwtProvider.getUserId(token);
                 log.info("user: " + user);
                 repositoryService.addSubscription(new UserDTO(uri[uri.length - 1], user));
-                sessions.put(accessor.getSessionId(), user);
-                log.info(accessor.getSessionId());
+
+                String sessionId = accessor.getFirstNativeHeader("sessionId");
+                sessions.put(sessionId, user);
+                log.info("session ID: " + sessionId);
+            } else {
+                return MessageBuilder.fromMessage(message)
+                        .setHeader("Authorization", jwtProvider.createToken())
+                        .build();
             }
         }
         return message;

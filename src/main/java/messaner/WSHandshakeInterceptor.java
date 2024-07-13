@@ -29,11 +29,10 @@ public class WSHandshakeInterceptor implements HandshakeInterceptor {
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
 
         log.info(request.getHeaders().toString());
-        String authorization = request.getHeaders().getFirst("Authorization");
+        String token = request.getHeaders().getFirst("Authorization");
 
-        log.info(authorization);
-        if(authorization != null && jwtProvider.isBearerToken(authorization)) {
-            String token = authorization.substring(7);
+        log.info(token);
+        if(token != null) {
             String name = jwtProvider.getUserId(token);
             return jwtProvider.validateToken(token, name);
         } else {

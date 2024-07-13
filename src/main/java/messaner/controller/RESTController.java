@@ -30,21 +30,11 @@ import java.util.*;
 
 @Slf4j
 @Controller
+@RequiredArgsConstructor
 public class RESTController {
     private final RepositoryService repositoryService;
     private final GsonFactory gsonFactory;
     private final WSChannelInterceptor channelInterceptor;
-
-    @Autowired
-    public RESTController(
-            RepositoryService repositoryService,
-            GsonFactory gsonFactory,
-            WSChannelInterceptor channelInterceptor
-    ) {
-        this.gsonFactory = gsonFactory;
-        this.repositoryService = repositoryService;
-        this.channelInterceptor = channelInterceptor;
-    }
 
     @PostMapping("/room/create")
     @ResponseBody
@@ -68,7 +58,7 @@ public class RESTController {
             @RequestParam(value="sessionId") String sessionId
     ) {
         String session = channelInterceptor.getSession(sessionId);
-        log.info("sessionID: " + session);
+        log.info("sessionID: " + sessionId);
 
         if(session != null) {
             UserDTO userDTO = new UserDTO(room, session);

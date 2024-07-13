@@ -22,12 +22,10 @@ import java.io.IOException;
 @Component
 @Slf4j
 public class JwtFilter extends OncePerRequestFilter {
-    private final RepositoryService repositoryService;
     private final JwtProvider jwtProvider;
 
     @Autowired
-    public JwtFilter(RepositoryService repositoryService, JwtProvider jwtProvider) {
-        this.repositoryService = repositoryService;
+    public JwtFilter(JwtProvider jwtProvider) {
         this.jwtProvider = jwtProvider;
     }
 
@@ -37,15 +35,13 @@ public class JwtFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         if(!isWebSocketRequest(request)) {
-            String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+            String token = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-            log.info("Authorization: " + header);
+            log.info("Authorization: " + token);
 
-            String token = null;
             String username = null;
 
-            if (header != null && jwtProvider.isBearerToken(header)) {
-                token = header.substring(7);
+            if (token != null) {
                 username = jwtProvider.getUserId(token);
             }
 
@@ -56,7 +52,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             } else if (token == null) {
-                response.setHeader("Authorization", jwtProvider.createToken(repositoryService.createUser()));
+                response.setHeader("Authorization", jwtProvider.createToken());
             }
         }
 
