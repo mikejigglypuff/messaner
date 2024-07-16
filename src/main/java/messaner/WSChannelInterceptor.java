@@ -53,7 +53,7 @@ public class WSChannelInterceptor implements ChannelInterceptor {
                 log.info("user: " + user);
                 repositoryService.addSubscription(new UserDTO(uri[uri.length - 1], user));
 
-                String sessionId = accessor.getFirstNativeHeader("sessionId");
+                String sessionId = jwtProvider.getSessionId(token);
                 sessions.put(sessionId, user);
                 log.info("session ID: " + sessionId);
             } else {

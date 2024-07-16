@@ -6,13 +6,13 @@ import { Client } from "@stomp/stompjs";
 const defaultURL = process.env.REACT_APP_DEFAULT_URL;
 const stompURL = process.env.REACT_APP_STOMP_URL;
 
-axios.interceptors.request.use(config => {
+axios.interceptors.request.use(req => {
     const token = localStorage.getItem("token");
     if(token) {
-        config.headers.Authorization = token;
+        req.headers.Authorization = token;
     }
 
-    return config;
+    return req;
 }, err => {
     console.error(err);
     return Promise.reject(err);
@@ -23,7 +23,6 @@ axios.interceptors.response.use(res => {
     if(token) {
         localStorage.setItem("token", token);
         console.log(token);
-
     }
 
     return res;
@@ -82,7 +81,7 @@ function App() {
     const getChat = async (url) => {
         const chat = await axios({
             method: "get",
-            url: `${defaultURL}/chats?name=${url}}`,
+            url: `${defaultURL}/chats?name=${url}`,
         });
 
         if(chat.data === "/topic/chatting/") {

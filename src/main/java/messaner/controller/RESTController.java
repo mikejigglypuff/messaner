@@ -3,6 +3,7 @@ package messaner.controller;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriUtils;
 
 import java.time.Instant;
 import java.util.*;
@@ -35,6 +37,7 @@ public class RESTController {
     private final RepositoryService repositoryService;
     private final GsonFactory gsonFactory;
     private final WSChannelInterceptor channelInterceptor;
+    private final JwtProvider jwtProvider;
 
     @PostMapping("/room/create")
     @ResponseBody
@@ -55,13 +58,14 @@ public class RESTController {
     @ResponseBody
     public String getChats(
             @RequestParam(value="room", required = false, defaultValue = "") String room,
-            @RequestParam(value="sessionId") String sessionId
+            HttpServletRequest req
     ) {
-        String session = channelInterceptor.getSession(sessionId);
-        log.info("sessionID: " + sessionId);
+        String session = req.getHeader("Authorization");
+        String decodeRoom = UriUtils.decode(room, "UTF-8");
+        log.info("session: " + session);
 
         if(session != null) {
-            UserDTO userDTO = new UserDTO(room, session);
+            UserDTO userDTO = new UserDTO(decodeRoom, jwtProvider.getUserId(session));
             if (repositoryService.userSubscribed(userDTO)) {
                 List<Chat> chats = repositoryService.getChats(userDTO);
 
@@ -78,7 +82,8 @@ public class RESTController {
     @ResponseBody
     public String searchRooms(@RequestParam(value="name", required = false, defaultValue = "") String name) {
         try {
-            List<Room> rooms = repositoryService.getRooms(new RoomDTO(name));
+            String decodeName = UriUtils.decode(name, "UTF-8");
+            List<Room> rooms = repositoryService.getRooms(new RoomDTO(decodeName));
             Gson gson = gsonFactory.instantGson();
             System.out.println(gson.toJson(rooms));
             return gson.toJson(rooms);

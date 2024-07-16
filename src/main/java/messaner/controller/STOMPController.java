@@ -15,6 +15,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriUtils;
 
 import java.util.*;
 
@@ -28,14 +29,14 @@ public class STOMPController {
     private final JwtProvider jwtProvider;
     private final WSChannelInterceptor channelInterceptor;
 
-    @MessageMapping("/chat/{room}")
+    @MessageMapping("/chat")
     public void sendChat(
-            @DestinationVariable String room,
+            @PathVariable(value = "room") String room,
             @Payload ChatDTO chatDTO,
-            @RequestParam(value="sessionId") String sessionId
+            StompHeaderAccessor accessor
     ) {
         String sendUrl, sendMsg;
-        String session = channelInterceptor.getSession(sessionId);
+        String session = channelInterceptor.getSession(accessor.getFirstNativeHeader("Authorization"));
         log.info("sessionID: " + session);
 
         if(session != null) {
@@ -55,10 +56,15 @@ public class STOMPController {
         }
     }
 
-    @MessageMapping("/unsubscribe/{room}")
-    public void unsubscribeRoom(@CookieValue("userId") Optional<String> cookie, @DestinationVariable("room") String room) {
-        if(cookie.isPresent()) {
-            UserDTO userDTO = new UserDTO(room, cookie.get());
+    @MessageMapping("/unsubscribe")
+    public void unsubscribeRoom(
+            @PathVariable(value = "room") String room,
+            StompHeaderAccessor accessor
+    ) {
+        String session = channelInterceptor.getSession(accessor.getFirstNativeHeader("Authorization"));
+        if(session != null) {
+            String decodeRoom = UriUtils.decode(room, "UTF-8");
+            UserDTO userDTO = new UserDTO(decodeRoom, jwtProvider.getUserId(session));
             repositoryService.removeSubscription(userDTO);
         }
     }

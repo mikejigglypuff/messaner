@@ -7,12 +7,12 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import messaner.service.RepositoryService;
+import messaner.Utility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
@@ -27,19 +27,22 @@ public class JwtProvider {
     private final SecretKey secretKey;
     private final long expireTime;
     private final RepositoryService repositoryService;
+    private final Utility utility;
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
     public JwtProvider(
             @Value("${spring.jwt.secret}") String secret,
             @Value("${spring.jwt.expireTime}") long expireTime,
-            RepositoryService repositoryService
+            RepositoryService repositoryService,
+            Utility utility
     ) {
         this.secret = secret;
         this.expireTime = expireTime;
         String keyBase64Encoded = Base64.getEncoder().encodeToString(secret.getBytes());
         this.secretKey = Keys.hmacShaKeyFor(keyBase64Encoded.getBytes());
         this.repositoryService = repositoryService;
+        this.utility = utility;
     }
 
     public String createToken() {
@@ -50,6 +53,7 @@ public class JwtProvider {
                 .issuedAt(Date.from(now.toInstant()))
                 .expiration(Date.from(tokenExp.toInstant()))
                 .subject(repositoryService.createUser())
+                .claim("sessionId", utility.createSessionId())
                 .signWith(secretKey)
                 .compact();
     }
@@ -78,9 +82,16 @@ public class JwtProvider {
         return this.getClaim(token, Claims::getExpiration);
     }
 
+    public String getSessionId(String token) { return this.getClaimBody(token, "sessionId", String.class); }
+
     private <T>T getClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = getAllClaims(token);
         return claimsResolver.apply(claims);
+    }
+
+    private <T>T getClaimBody(String token, String name, Class<T> type) {
+        final Claims claims = getAllClaims(token);
+        return claims.get(name, type);
     }
 
     private Claims getAllClaims(String token) {
