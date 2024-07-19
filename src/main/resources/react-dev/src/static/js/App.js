@@ -81,7 +81,7 @@ function App() {
     const getChat = async (url) => {
         const chat = await axios({
             method: "get",
-            url: `${defaultURL}/chats?name=${url}`,
+            url: `${defaultURL}/chats?room=${url}`,
         });
 
         if(chat.data === "/topic/chatting/") {
@@ -176,7 +176,7 @@ function App() {
         if(!client.current) {
             getSession();
         } else {
-            getChat();
+            getChat(roomName);
         }
     }, []);
 

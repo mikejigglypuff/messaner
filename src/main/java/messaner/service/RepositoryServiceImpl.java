@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import messaner.DTO.ChatDTO;
 import messaner.DTO.RoomDTO;
 import messaner.DTO.UserDTO;
+import messaner.model.AggNameResult;
 import messaner.model.Chat;
 import messaner.model.Room;
 import messaner.model.User;
@@ -12,6 +13,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -21,6 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
+
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.project;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.unwind;
 
 @Slf4j
 @Service
@@ -67,6 +74,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     public boolean addSubscription(UserDTO userDTO) {
         try {
             if(!roomExists(userDTO.getRoom())) throw new NoSuchElementException();
+            if(userSubscribed(userDTO)) throw new Exception("username " + userDTO.getUser() + " already subscribed");
 
             Query query = new Query(Criteria.where("name").is(userDTO.getRoom()));
             Update update = new Update().push("subscribers", new User(userDTO));
@@ -173,13 +181,15 @@ public class RepositoryServiceImpl implements RepositoryService {
 
     @Override
     public boolean userSubscribed(UserDTO userDTO) {
-        Query query = new Query(
-                Criteria.where("name").is(userDTO.getRoom())
-                        .and("subscribers.name").is(userDTO.getUser())
+        Aggregation agg = Aggregation.newAggregation(
+            match(Criteria.where("_id").is(userDTO.getRoom())),
+            unwind("subscribers"),
+            match(Criteria.where("subscribers.name").is(userDTO.getUser())),
+            project().and("subscribers.name").as("name")
         );
-        Room room = template.findOne(query, Room.class);
 
-        return room != null;
+        AggregationResults<AggNameResult> result = template.aggregate(agg, "room", AggNameResult.class);
+        return !result.getMappedResults().isEmpty();
     }
 
     private boolean roomExists(String room) {

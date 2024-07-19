@@ -66,6 +66,8 @@ public class RESTController {
 
         if(session != null) {
             UserDTO userDTO = new UserDTO(decodeRoom, jwtProvider.getUserId(session));
+            log.info("room: " + room + " userId: " + userDTO.getUser());
+
             if (repositoryService.userSubscribed(userDTO)) {
                 List<Chat> chats = repositoryService.getChats(userDTO);
 
