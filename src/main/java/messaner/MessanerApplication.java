@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter;
 
 @SpringBootApplication
 @ComponentScan(basePackages = {"messaner"})
-@PropertySource("classpath:application-prod.properties")
+@PropertySource("classpath:application-dev.properties")
 @Slf4j
 public class MessanerApplication {
 

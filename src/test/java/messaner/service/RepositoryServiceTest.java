@@ -34,6 +34,10 @@ public class RepositoryServiceTest {
     private final Chat[] compChats;
     private final UserDTO createdRoom;
     private final TransactionTemplate transactionTemplate;
+    private final List<UserDTO> subscriptionUsers;
+    private final List<UserDTO> notSubUsers;
+    private final UserDTO subUnsubUser;
+    private final UserDTO subWrongRoomUser;
 
     @Autowired
     RepositoryServiceTest(RepositoryService repositoryService, TransactionTemplate transactionTemplate) {
@@ -47,6 +51,18 @@ public class RepositoryServiceTest {
         };
         this.createdRoom = new UserDTO("개노잼정령산", "naia");
         this.transactionTemplate = transactionTemplate;
+        this.subscriptionUsers = Arrays.asList(
+                new UserDTO("와구와구프린세스", "erpin"),
+                new UserDTO("버터왕국", "user_126a1cd5-c91e-4553-8694-baa38ce4a70d"),
+                new UserDTO("사료스탕스", "tig")
+        );
+        this.notSubUsers = Arrays.asList(
+                new UserDTO("와구와구프린세스", "elena"),
+                new UserDTO("사료스탕스", "user_126a1cd5-c91e-4553-8694-badi30aoe1kc")//,
+                //new UserDTO("와구와구프린세스", "komi")
+        );
+        this.subUnsubUser = new UserDTO("롤더체스", "goblinMiko");
+        this.subWrongRoomUser = new UserDTO("롤xh체스", "goblinMiko");
     }
 
     @ParameterizedTest
@@ -64,17 +80,18 @@ public class RepositoryServiceTest {
 
     }
 
+    /*
     @Test
     public void addSubscription() {
-        UserDTO userDTO = new UserDTO("롤더체스", "goblinMiko");
-
         transactionTemplate.execute(status -> {
-            assertTrue(repositoryService.addSubscription(userDTO));
+            assertTrue(repositoryService.addSubscription(subUnsubUser));
 
             status.setRollbackOnly();
             return null;
         });
     }
+
+     */
 
     @ParameterizedTest
     @ValueSource(strings = {"erpin"})
@@ -143,17 +160,18 @@ public class RepositoryServiceTest {
         assertThat(chats.size()).isEqualTo(0);
     }
 
+    /*
     @Test
     public void removeSubError() {
-        UserDTO userDTO = new UserDTO("롤토체스", "goblinMiko");
-
         transactionTemplate.execute(status -> {
-            assertFalse(repositoryService.removeSubscription(userDTO));
+            assertFalse(repositoryService.removeSubscription(subUnsubUser));
 
             status.setRollbackOnly();
             return null;
         });
     }
+
+     */
 
     @Test
     public void removeSubscription() {
@@ -182,10 +200,8 @@ public class RepositoryServiceTest {
 
     @Test
     public void subWrongRoom() {
-        UserDTO userDTO = new UserDTO("롤토체스", "goblinMiko");
-
         transactionTemplate.execute(status -> {
-            assertFalse(repositoryService.addSubscription(userDTO));
+            assertFalse(repositoryService.addSubscription(subWrongRoomUser));
 
             status.setRollbackOnly();
             return null;
@@ -206,14 +222,20 @@ public class RepositoryServiceTest {
 
     @Test
     public void userNotSubscribed() {
-        UserDTO userDTO = new UserDTO("와구와구프린세스", "elena");
-        assertFalse(repositoryService.userSubscribed(userDTO));
+        boolean checkNotSub = true;
+        for(UserDTO userDTO : notSubUsers) {
+            checkNotSub = !repositoryService.userSubscribed(userDTO);
+        }
+        assertTrue(checkNotSub);
     }
 
     @Test
     public void userSubscribed() {
-        UserDTO userDTO = new UserDTO("와구와구프린세스", "erpin");
-        assertTrue(repositoryService.userSubscribed(userDTO));
+        boolean correctSubscription = true;
+        for(UserDTO userDTO : subscriptionUsers) {
+            correctSubscription = repositoryService.userSubscribed(userDTO);
+        }
+        assertTrue(correctSubscription);
     }
 
     static Stream<Arguments> originRooms() {

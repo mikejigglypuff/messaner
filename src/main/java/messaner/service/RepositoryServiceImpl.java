@@ -180,6 +180,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Override
+    @Transactional
     public boolean userSubscribed(UserDTO userDTO) {
         Aggregation agg = Aggregation.newAggregation(
             match(Criteria.where("_id").is(userDTO.getRoom())),
@@ -189,7 +190,11 @@ public class RepositoryServiceImpl implements RepositoryService {
         );
 
         AggregationResults<AggNameResult> result = template.aggregate(agg, "room", AggNameResult.class);
-        return !result.getMappedResults().isEmpty();
+        List<AggNameResult> mappedResult = result.getMappedResults();
+        for(AggNameResult r : mappedResult) {
+            log.info(r.toString());
+        }
+        return !mappedResult.isEmpty();
     }
 
     private boolean roomExists(String room) {

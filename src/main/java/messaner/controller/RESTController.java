@@ -61,12 +61,10 @@ public class RESTController {
             HttpServletRequest req
     ) {
         String session = req.getHeader("Authorization");
-        String decodeRoom = UriUtils.decode(room, "UTF-8");
-        log.info("session: " + session);
 
         if(session != null) {
-            UserDTO userDTO = new UserDTO(decodeRoom, jwtProvider.getUserId(session));
-            log.info("room: " + room + " userId: " + userDTO.getUser());
+            UserDTO userDTO = new UserDTO(room, jwtProvider.getUserId(session));
+            log.info("room: " + userDTO.getRoom() + " user: " + userDTO.getUser());
 
             if (repositoryService.userSubscribed(userDTO)) {
                 List<Chat> chats = repositoryService.getChats(userDTO);

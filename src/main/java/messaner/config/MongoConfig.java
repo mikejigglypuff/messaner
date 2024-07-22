@@ -6,6 +6,7 @@ import com.mongodb.client.internal.MongoClientImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.SessionSynchronization;
@@ -33,7 +34,7 @@ public class MongoConfig extends AbstractMongoClientConfiguration{
     }
 
     @Bean
-    public MongoTemplate mongoTemplate() throws Exception {
+    public MongoTemplate MongoTemplate() throws Exception {
         MongoTemplate template = new MongoTemplate(mongoClient(), getDatabaseName());
         template.setSessionSynchronization(SessionSynchronization.ALWAYS);
         return template;

@@ -114,6 +114,8 @@ function App() {
     }
 
     const sendChat = async () => {
+        console.log(client.current);
+        console.log(message);
         if(client.current && message) {
             client.current.publish({
                 destination: `/pub/chat}`,
@@ -197,7 +199,7 @@ function App() {
                         <div className="chatMessage">{chat.message}</div>
                         <div className="chatCreatedAt">{chat.createdAt}</div>
                     </div>
-                    </div>
+                </div>
             )) }
             <div className="chatRoomFooter">
                 <input className="msagInput" placeholder="Type a message" onChange={typeMessage} />

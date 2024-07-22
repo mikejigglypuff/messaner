@@ -47,7 +47,7 @@ public class WSChannelInterceptor implements ChannelInterceptor {
 
                 assert dest != null;
                 String[] uri = dest.split("/");
-                log.info("Message destination: " + uri[uri.length - 1]);
+                //log.info("Message destination: " + uri[uri.length - 1]);
 
                 String user = jwtProvider.getUserId(token);
                 log.info("user: " + user);
@@ -55,7 +55,7 @@ public class WSChannelInterceptor implements ChannelInterceptor {
 
                 String sessionId = jwtProvider.getSessionId(token);
                 sessions.put(sessionId, user);
-                log.info("session ID: " + sessionId);
+                //log.info("session ID: " + sessionId);
             } else {
                 return MessageBuilder.fromMessage(message)
                         .setHeader("Authorization", jwtProvider.createToken())
