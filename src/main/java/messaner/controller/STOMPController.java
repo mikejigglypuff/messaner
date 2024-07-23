@@ -31,7 +31,6 @@ public class STOMPController {
 
     @MessageMapping("/chat")
     public void sendChat(
-            @PathVariable(value = "room") String room,
             @Payload ChatDTO chatDTO,
             StompHeaderAccessor accessor
     ) {
