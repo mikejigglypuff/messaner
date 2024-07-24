@@ -60,8 +60,9 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     private boolean isWebSocketRequest(HttpServletRequest request) {
+        String uri = request.getRequestURI();
 
-        return request.getRequestURI().startsWith("/ws");
+        return uri.startsWith("/ws") || uri.startsWith("/topic") || uri.startsWith("/queue");
     }
 
     private Authentication createAuthentication(String token) {

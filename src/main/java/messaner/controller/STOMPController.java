@@ -55,6 +55,11 @@ public class STOMPController {
         }
     }
 
+    @SubscribeMapping("topic/sub/{room}")
+    public String subscribeRoom(@PathVariable String room) {
+        return "subscribed to channel " + room;
+    }
+
     @MessageMapping("/unsubscribe")
     public void unsubscribeRoom(
             @PathVariable(value = "room") String room,

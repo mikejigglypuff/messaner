@@ -39,28 +39,34 @@ public class WSChannelInterceptor implements ChannelInterceptor {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         StompCommand command = accessor.getCommand();
 
-        if(StompCommand.SUBSCRIBE.equals(command)) {
-            String token = accessor.getFirstNativeHeader("Authorization");
-            log.info("Message token: " + token);
-            if(token != null) {
-                String dest = accessor.getDestination();
+        if(StompCommand.CONNECT.equals(command)) {
+            try {
+                String token = accessor.getFirstNativeHeader("Authorization");
+                log.info("Message token: " + token);
+                if (token != null) {
+                    String dest = accessor.getDestination();
 
-                assert dest != null;
-                String[] uri = dest.split("/");
-                //log.info("Message destination: " + uri[uri.length - 1]);
+                    assert dest != null;
+                    String[] uri = dest.split("/");
+                    //log.info("Message destination: " + uri[uri.length - 1]);
 
-                String user = jwtProvider.getUserId(token);
-                log.info("user: " + user);
-                repositoryService.addSubscription(new UserDTO(uri[uri.length - 1], user));
+                    String user = jwtProvider.getUserId(token);
+                    log.info("user: " + user);
+                    repositoryService.addSubscription(new UserDTO(uri[uri.length - 1], user));
 
-                String sessionId = jwtProvider.getSessionId(token);
-                sessions.put(sessionId, user);
-                //log.info("session ID: " + sessionId);
-            } else {
-                return MessageBuilder.fromMessage(message)
-                        .setHeader("Authorization", jwtProvider.createToken())
-                        .build();
+                    String sessionId = jwtProvider.getSessionId(token);
+                    sessions.put(sessionId, user);
+                    //log.info("session ID: " + sessionId);
+                } else {
+                    return MessageBuilder.fromMessage(message)
+                            .setHeader("Authorization", jwtProvider.createToken())
+                            .build();
+                }
+            } catch (Exception e) {
+                log.error(e.getMessage());
             }
+        } else if(command != null && accessor.getDestination() != null){
+            log.info("Command: " + command + ", url:" + accessor.getDestination());
         }
         return message;
     }
