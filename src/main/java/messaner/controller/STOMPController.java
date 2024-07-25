@@ -13,15 +13,16 @@ import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriUtils;
 
 import java.util.*;
 
-@RequiredArgsConstructor
-@Controller
 @Slf4j
+@Controller
+@RequiredArgsConstructor
 public class STOMPController {
 
     private final RepositoryService repositoryService;
@@ -29,17 +30,19 @@ public class STOMPController {
     private final JwtProvider jwtProvider;
     private final WSChannelInterceptor channelInterceptor;
 
-    @MessageMapping("/chat")
+    @MessageMapping("/{room}")
+    @SendTo("/topic/{room}")
     public void sendChat(
-            @Payload ChatDTO chatDTO,
-            StompHeaderAccessor accessor
+            @DestinationVariable String room,
+            @Header("Authorization") String name,
+            @Payload ChatDTO chatDTO
     ) {
-        String sendUrl, sendMsg;
-        String session = channelInterceptor.getSession(accessor.getFirstNativeHeader("Authorization"));
+        String sendUrl, sendMsg, user;
+        String session = channelInterceptor.getSession(name);
         log.info("sessionID: " + session);
 
-        if(session != null) {
-            String user = jwtProvider.getUserId(session);
+        if (session != null) {
+            user = jwtProvider.getUserId(session);
 
             if (repositoryService.addChat(chatDTO, user, null)) {
                 sendUrl = "/topic/chat/" + chatDTO.getRoom();
@@ -53,11 +56,6 @@ public class STOMPController {
                     user, sendUrl, sendMsg
             );
         }
-    }
-
-    @SubscribeMapping("topic/sub/{room}")
-    public String subscribeRoom(@PathVariable String room) {
-        return "subscribed to channel " + room;
     }
 
     @MessageMapping("/unsubscribe")
@@ -76,6 +74,10 @@ public class STOMPController {
     @MessageExceptionHandler
     @SendToUser("/queue/error")
     public String exceptionHandle(Throwable e) {
-        return e.getMessage();
+        String msg = e.getMessage();
+
+        log.error(msg);
+        return msg;
     }
+
 }

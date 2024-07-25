@@ -39,16 +39,16 @@ public class WSChannelInterceptor implements ChannelInterceptor {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
         StompCommand command = accessor.getCommand();
 
-        if(StompCommand.CONNECT.equals(command)) {
-            try {
+        try {
+            if (StompCommand.SUBSCRIBE.equals(command)) {
                 String token = accessor.getFirstNativeHeader("Authorization");
                 log.info("Message token: " + token);
                 if (token != null) {
                     String dest = accessor.getDestination();
+                    log.info("Command: " + command + ", dest:" + dest);
 
                     assert dest != null;
                     String[] uri = dest.split("/");
-                    //log.info("Message destination: " + uri[uri.length - 1]);
 
                     String user = jwtProvider.getUserId(token);
                     log.info("user: " + user);
@@ -56,18 +56,24 @@ public class WSChannelInterceptor implements ChannelInterceptor {
 
                     String sessionId = jwtProvider.getSessionId(token);
                     sessions.put(sessionId, user);
-                    //log.info("session ID: " + sessionId);
+
                 } else {
                     return MessageBuilder.fromMessage(message)
                             .setHeader("Authorization", jwtProvider.createToken())
                             .build();
                 }
-            } catch (Exception e) {
-                log.error(e.getMessage());
+            } else if (command != null && accessor.getDestination() != null) {
+                log.info("Command: " + command + ", url:" + accessor.getDestination());
             }
-        } else if(command != null && accessor.getDestination() != null){
-            log.info("Command: " + command + ", url:" + accessor.getDestination());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+
+            return MessageBuilder.withPayload("Error processing message: " + e.getMessage())
+                    .copyHeadersIfAbsent(message.getHeaders())
+                    .build();
         }
+
+
         return message;
     }
 
