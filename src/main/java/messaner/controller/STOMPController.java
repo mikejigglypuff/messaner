@@ -33,7 +33,7 @@ public class STOMPController {
     @MessageMapping("/{room}")
     @SendTo("/topic/{room}")
     public void sendChat(
-            @DestinationVariable String room,
+            @DestinationVariable("room") String room,
             @Header("Authorization") String name,
             @Payload ChatDTO chatDTO
     ) {
