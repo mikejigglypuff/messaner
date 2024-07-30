@@ -72,7 +72,7 @@ public class RepositoryServiceTest {
         Instant dateTime = Instant.now();
 
         transactionTemplate.execute(status -> {
-            assertTrue(repositoryService.addChat(chatDTO, user, dateTime));
+            assertThat(repositoryService.addChat(chatDTO, user, dateTime)).isEqualTo(new Chat(chatDTO, user, dateTime));
 
             status.setRollbackOnly();
             return null;
@@ -99,7 +99,7 @@ public class RepositoryServiceTest {
         ChatDTO chatDTO = new ChatDTO("요정왕국", "버터는놀려야제맛");
 
         transactionTemplate.execute(status -> {
-            assertFalse(repositoryService.addChat(chatDTO, user, null));
+            assertThat(repositoryService.addChat(chatDTO, user, null)).isEqualTo(new Chat());
 
             status.setRollbackOnly();
             return null;

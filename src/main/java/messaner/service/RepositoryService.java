@@ -14,7 +14,7 @@ public interface RepositoryService {
     public List<Chat> getChats(RoomDTO roomDTO);
     public boolean createChannel(UserDTO userDTO);
     public boolean addSubscription(UserDTO userDTO);
-    public boolean addChat(ChatDTO chatDTO, String user, Instant dateTime);
+    public Chat addChat(ChatDTO chatDTO, String user, Instant dateTime);
     public List<Room> getRooms(RoomDTO roomDTO);
     public boolean removeSubscription(UserDTO userDTO);
     public boolean userAlreadyExists(String user);

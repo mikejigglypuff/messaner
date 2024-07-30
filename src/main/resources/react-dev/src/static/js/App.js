@@ -39,8 +39,7 @@ function App() {
     const [chatting, setChatting] = useState([]);
     const client = useRef(null);
 
-    const connect = () => {
-        const url = "와구와구프린세스";
+    const connect = url => {
         setRoomName(url);
         const token = localStorage.getItem("token");
         if(token) {
@@ -85,11 +84,13 @@ function App() {
             url: `${defaultURL}/chats?room=${url}`,
         });
 
-        if(chat.data === "/topic/chatting/") {
-
+        if(chat.data === `/topic/chatting/${url}`) {
+            subscribeRoom(client.current, url);
+            getChat(url);
+        } else {
+            setChatting(chat.data);
+            console.log(chat);
         }
-        setChatting(chat.data);
-        console.log(chat);
     }
 
     const getRooms = async () => {
@@ -128,6 +129,7 @@ function App() {
                     chat: message
                 }),
             });
+            setMessage("");
         }
     }
 
@@ -150,13 +152,7 @@ function App() {
         stompClient.onConnect = (frame) => {
             console.log(frame);
 
-            const token = localStorage.getItem("token");
-            stompClient.subscribe(`/topic/${url}`, message => {
-                console.log(message);
-            }, {
-                "Authorization": token
-            }); //a에 구독
-
+            subscribeRoom(stompClient, url);
             getChat(url);
         };
 
@@ -166,6 +162,17 @@ function App() {
         }
 
         return stompClient;
+    }
+
+    const subscribeRoom = (stompClient, url) => {
+        const token = localStorage.getItem("token");
+        stompClient.subscribe(`/topic/${url}`, message => {
+            console.log(message);
+
+            setChatting(prevChatting => [...prevChatting, JSON.parse(message.body)]);
+        }, {
+            "Authorization": token
+        }); //a에 구독
     }
 
     const typeMessage = e => {
@@ -221,7 +228,7 @@ function App() {
                     </div>
                     <div className="roomList">
                         { Object.values(roomList).map(val => (
-                            <label onClick={connect}>
+                            <label onClick={() => connect(val.name)}>
                                 <div className="roomInfo" key={val.name}>
                                     <div className="roomName">{val.name}</div>
                                     <div className="roomMember">

@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 public class UserDTO extends RoomDTO {
     protected String user;
 
-    public UserDTO(String user, String room) {
+    public UserDTO(String room, String user) {
         super(room);
         this.user = user;
     }

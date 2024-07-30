@@ -41,14 +41,15 @@ public class RepositoryServiceImpl implements RepositoryService {
 
     @Override
     @Transactional
-    public boolean addChat(ChatDTO chatDTO, String user, Instant dateTime) {
+    public Chat addChat(ChatDTO chatDTO, String user, Instant dateTime) {
         UserDTO userDTO = new UserDTO(chatDTO.getRoom(), user);
+        Chat newChat = new Chat();
         try {
             if(!roomExists(chatDTO.getRoom())) throw new NoSuchElementException();
 
             if(userSubscribed(userDTO)) {
                 Instant date = (dateTime != null) ? dateTime : Instant.now();
-                Chat newChat = new Chat(chatDTO, user, date);
+                newChat = new Chat(chatDTO, user, date);
 
                 BulkOperations bulkOps = template.bulkOps(BulkOperations.BulkMode.UNORDERED, Room.class);
 
@@ -62,11 +63,10 @@ public class RepositoryServiceImpl implements RepositoryService {
 
                 bulkOps.execute();
             }
-            return true;
         } catch (Exception e) {
             log.error(e.getMessage());
-            return false;
         }
+        return newChat;
     }
 
     @Override
@@ -74,7 +74,8 @@ public class RepositoryServiceImpl implements RepositoryService {
     public boolean addSubscription(UserDTO userDTO) {
         try {
             if(!roomExists(userDTO.getRoom())) throw new NoSuchElementException();
-            if(userSubscribed(userDTO)) throw new Exception("username " + userDTO.getUser() + " already subscribed");
+            if(userSubscribed(userDTO)) return false;
+            //if(userSubscribed(userDTO)) throw new Exception("username " + userDTO.getUser() + " already subscribed");
 
             Query query = new Query(Criteria.where("name").is(userDTO.getRoom()));
             Update update = new Update().push("subscribers", new User(userDTO));

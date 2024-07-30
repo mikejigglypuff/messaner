@@ -24,8 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WSChannelInterceptor implements ChannelInterceptor {
     private final RepositoryService repositoryService;
     private final JwtProvider jwtProvider;
-
-    private final Map<String, String> sessions;
+    private final Map<String, String> sessions; //key: userId, val: sessionId
 
     @Autowired
     public WSChannelInterceptor(RepositoryService repositoryService, JwtProvider jwtProvider) {
@@ -52,10 +51,11 @@ public class WSChannelInterceptor implements ChannelInterceptor {
 
                     String user = jwtProvider.getUserId(token);
                     log.info("user: " + user);
+
                     repositoryService.addSubscription(new UserDTO(uri[uri.length - 1], user));
 
                     String sessionId = jwtProvider.getSessionId(token);
-                    sessions.put(sessionId, user);
+                    sessions.put(user, sessionId);
 
                 } else {
                     return MessageBuilder.fromMessage(message)
@@ -77,7 +77,7 @@ public class WSChannelInterceptor implements ChannelInterceptor {
         return message;
     }
 
-    public String getSession(String sessionId) {
-        return sessions.get(sessionId);
+    public String getSession(String token) {
+        return sessions.get(jwtProvider.getUserId(token));
     }
 }

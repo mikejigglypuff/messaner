@@ -6,6 +6,7 @@ import messaner.DTO.ChatDTO;
 import messaner.DTO.UserDTO;
 import messaner.JwtProvider;
 import messaner.WSChannelInterceptor;
+import messaner.model.Chat;
 import messaner.service.RepositoryService;
 import org.springframework.messaging.handler.annotation.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriUtils;
 
+import java.time.Instant;
 import java.util.*;
 
 @Slf4j
@@ -32,30 +34,22 @@ public class STOMPController {
 
     @MessageMapping("/{room}")
     @SendTo("/topic/{room}")
-    public void sendChat(
+    public Chat sendChat(
             @DestinationVariable("room") String room,
-            @Header("Authorization") String name,
+            @Header("Authorization") String token,
             @Payload ChatDTO chatDTO
     ) {
-        String sendUrl, sendMsg, user;
-        String session = channelInterceptor.getSession(name);
-        log.info("sessionID: " + session);
+        String session = channelInterceptor.getSession(token);
+        log.info("token: " + token + ", sessionID: " + session);
 
         if (session != null) {
-            user = jwtProvider.getUserId(session);
+            String user = jwtProvider.getUserId(token);
+            Instant date = Instant.now();
 
-            if (repositoryService.addChat(chatDTO, user, null)) {
-                sendUrl = "/topic/chat/" + chatDTO.getRoom();
-                sendMsg = chatDTO.getChat();
-            } else {
-                sendUrl = "/queue/" + user;
-                sendMsg = "채팅 입력에 문제가 발생했습니다";
-            }
-
-            messagingTemplate.convertAndSendToUser(
-                    user, sendUrl, sendMsg
-            );
+            return repositoryService.addChat(chatDTO, user, date);
         }
+
+        return null;
     }
 
     @MessageMapping("/unsubscribe")
