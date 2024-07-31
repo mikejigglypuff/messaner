@@ -68,14 +68,20 @@ function App() {
         }
     }
 
-    const disconnect = () => {
+    const disconnect = url => {
         if(client.current) {
+            if(client.current.connected) {
+                unsubscribeRoom(url);
+            }
+            client.current.disconnect(() => {
+                console.log("disconnected");
+            });
             client.current.deactivate();
             setChatting([]);
             setMessage("");
-            setRoomName("/");
             client.current = null;
         }
+
     }
 
     const getChat = async (url) => {
@@ -156,6 +162,10 @@ function App() {
             getChat(url);
         };
 
+        window.addEventListener("beforeunload", e => {
+            disconnect(url);
+        });
+
         if(!("WebSocket" in window)) {
            stompClient.webSocketFactory = () => { new SockJS(`${defaultURL}/sockjs`) }
            stompClient.brokerURL = `${defaultURL}/sockjs`;
@@ -183,6 +193,15 @@ function App() {
         setRoomName(e.target.value);
     }
 
+    const unsubscribeRoom = url => {
+        if(client.current && client.current.connected) {
+            const token = localStorage.getItem("token");
+            client.current.unsubscribe(`/topic/${url}`, {
+                "Authorization": token
+            });
+        }
+    }
+
     useEffect(() => {
         if(!client.current) {
             getSession();
@@ -194,7 +213,7 @@ function App() {
     return (client.current) ? <div className="chatRoom">
             <div className="chatRoomHeader">
                 <button variant="outline">
-                    <ArrowLeftIcon onClick={disconnect}/>
+                    <ArrowLeftIcon onClick={() => disconnect(roomName)}/>
                 </button>
                 <div className="chatRoomName">{roomName}</div>
             </div>

@@ -14,6 +14,7 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.util.UriUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,40 +40,38 @@ public class WSChannelInterceptor implements ChannelInterceptor {
         StompCommand command = accessor.getCommand();
 
         try {
-            if (StompCommand.SUBSCRIBE.equals(command)) {
-                String token = accessor.getFirstNativeHeader("Authorization");
-                log.info("Message token: " + token);
-                if (token != null) {
-                    String dest = accessor.getDestination();
-                    log.info("Command: " + command + ", dest:" + dest);
+            String token = accessor.getFirstNativeHeader("Authorization");
+            log.info("Message token: " + token);
+            if (token != null) {
+                String dest = accessor.getDestination();
+                log.info("Command: " + command + ", dest:" + dest);
 
-                    assert dest != null;
-                    String[] uri = dest.split("/");
+                assert dest != null;
+                String[] uri = dest.split("/");
 
-                    String user = jwtProvider.getUserId(token);
-                    log.info("user: " + user);
+                String user = jwtProvider.getUserId(token);
+                log.info("user: " + user);
 
+                if (StompCommand.SUBSCRIBE.equals(command)) {
                     repositoryService.addSubscription(new UserDTO(uri[uri.length - 1], user));
-
                     String sessionId = jwtProvider.getSessionId(token);
                     sessions.put(user, sessionId);
 
-                } else {
-                    return MessageBuilder.fromMessage(message)
-                            .setHeader("Authorization", jwtProvider.createToken())
-                            .build();
+                } else if(StompCommand.UNSUBSCRIBE.equals(command)) {
+                    repositoryService.removeSubscription(new UserDTO(uri[uri.length - 1], user));
+                    sessions.remove(user);
                 }
-            } else if (command != null && accessor.getDestination() != null) {
-                log.info("Command: " + command + ", url:" + accessor.getDestination());
+            } else {
+                return MessageBuilder.fromMessage(message)
+                        .setHeader("Authorization", jwtProvider.createToken())
+                        .build();
             }
         } catch (Exception e) {
             log.error(e.getMessage());
-
             return MessageBuilder.withPayload("Error processing message: " + e.getMessage())
                     .copyHeadersIfAbsent(message.getHeaders())
                     .build();
         }
-
 
         return message;
     }

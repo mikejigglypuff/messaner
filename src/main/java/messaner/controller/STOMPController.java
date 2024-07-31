@@ -52,19 +52,6 @@ public class STOMPController {
         return null;
     }
 
-    @MessageMapping("/unsubscribe")
-    public void unsubscribeRoom(
-            @PathVariable(value = "room") String room,
-            StompHeaderAccessor accessor
-    ) {
-        String session = channelInterceptor.getSession(accessor.getFirstNativeHeader("Authorization"));
-        if(session != null) {
-            String decodeRoom = UriUtils.decode(room, "UTF-8");
-            UserDTO userDTO = new UserDTO(decodeRoom, jwtProvider.getUserId(session));
-            repositoryService.removeSubscription(userDTO);
-        }
-    }
-
     @MessageExceptionHandler
     @SendToUser("/queue/error")
     public String exceptionHandle(Throwable e) {
