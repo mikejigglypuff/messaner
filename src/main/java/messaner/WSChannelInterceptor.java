@@ -46,22 +46,23 @@ public class WSChannelInterceptor implements ChannelInterceptor {
                 String dest = accessor.getDestination();
                 log.info("Command: " + command + ", dest:" + dest);
 
-                assert dest != null;
-                String[] uri = dest.split("/");
+                if(dest != null) {
+                    String[] uri = dest.split("/");
 
-                String user = jwtProvider.getUserId(token);
-                log.info("user: " + user);
+                    String user = jwtProvider.getUserId(token);
+                    log.info("user: " + user);
 
-                if (StompCommand.SUBSCRIBE.equals(command)) {
-                    repositoryService.addSubscription(new UserDTO(uri[uri.length - 1], user));
-                    String sessionId = jwtProvider.getSessionId(token);
-                    sessions.put(user, sessionId);
+                    if (StompCommand.SUBSCRIBE.equals(command)) {
+                        repositoryService.addSubscription(new UserDTO(uri[uri.length - 1], user));
+                        String sessionId = jwtProvider.getSessionId(token);
+                        sessions.put(user, sessionId);
 
-                } else if(StompCommand.UNSUBSCRIBE.equals(command)) {
-                    repositoryService.removeSubscription(new UserDTO(uri[uri.length - 1], user));
-                    sessions.remove(user);
+                    } else if (StompCommand.UNSUBSCRIBE.equals(command)) {
+                        repositoryService.removeSubscription(new UserDTO(uri[uri.length - 1], user));
+                        sessions.remove(user);
+                    }
                 }
-            } else {
+            } else if (StompCommand.SUBSCRIBE.equals(command)) {
                 return MessageBuilder.fromMessage(message)
                         .setHeader("Authorization", jwtProvider.createToken())
                         .build();

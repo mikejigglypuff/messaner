@@ -33,19 +33,18 @@ axios.interceptors.response.use(res => {
 });
 
 function App() {
+    const [chatting, setChatting] = useState([]);
+    const [message, setMessage] = useState("");
     const [roomList, setRoomList] = useState([]);
     const [roomName, setRoomName] = useState("");
-    const [message, setMessage] = useState("");
-    const [chatting, setChatting] = useState([]);
     const client = useRef(null);
 
     const connect = url => {
         setRoomName(url);
         const token = localStorage.getItem("token");
         if(token) {
-            client.current = stompFactory(token, url);
+            if(!client.current) { client.current = stompFactory(token, url); }
             client.current.activate();
-            console.log(client.current);
         }
     };
 
@@ -73,15 +72,15 @@ function App() {
             if(client.current.connected) {
                 unsubscribeRoom(url);
             }
-            client.current.disconnect(() => {
-                console.log("disconnected");
+            client.current.deactivate().then(() => {
+                console.log('Deactivated');
+            }).catch((error) => {
+                console.error('Error during deactivation:', error);
+                if (error.message === 'Session closed.') {
+                    console.log('Session is already closed.');
+                }
             });
-            client.current.deactivate();
-            setChatting([]);
-            setMessage("");
-            client.current = null;
         }
-
     }
 
     const getChat = async (url) => {
@@ -108,7 +107,7 @@ function App() {
         });
 
         console.log(rooms);
-        setRoomList(rooms.data);
+        setRoomList((rooms.data === "no room matches") ? [] : rooms.data);
     }
 
     const getSession = async () => {
@@ -149,6 +148,11 @@ function App() {
                 incoming: 15000,
                 outgoing: 15000
             },
+            onDisconnect: () => {
+                setChatting([]);
+                setMessage("");
+                setRoomName("");
+            },
             onStompError: frame => {
                 console.log(`reported error: ${frame.headers["message"]}`);
                 console.log(`error detail: ${frame}`);
@@ -156,8 +160,6 @@ function App() {
         });
 
         stompClient.onConnect = (frame) => {
-            console.log(frame);
-
             subscribeRoom(stompClient, url);
             getChat(url);
         };
@@ -203,14 +205,22 @@ function App() {
     }
 
     useEffect(() => {
-        if(!client.current) {
+        if(!(client.current && client.current.connected)) {
             getSession();
         } else {
             getChat(roomName);
         }
     }, []);
 
-    return (client.current) ? <div className="chatRoom">
+    useEffect(() => {
+        getRooms();
+    }, [roomName]);
+
+    useEffect(() => {
+
+    }, [chatting, message]);
+
+    return (client.current && client.current.connected) ? <div className="chatRoom">
             <div className="chatRoomHeader">
                 <button variant="outline">
                     <ArrowLeftIcon onClick={() => disconnect(roomName)}/>
@@ -228,7 +238,7 @@ function App() {
                         <div className="chatCreatedAt">{chat.createdAt}</div>
                     </div>
                 </div>
-            )) }
+            ))}
             <div className="chatRoomFooter">
                 <input className="msagInput" placeholder="Type a message" onChange={typeMessage} />
                 <button size="icon" onClick={sendChat}>
