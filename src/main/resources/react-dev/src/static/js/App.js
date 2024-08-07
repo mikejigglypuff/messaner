@@ -34,6 +34,7 @@ axios.interceptors.response.use(res => {
 
 function App() {
     const [chatting, setChatting] = useState([]);
+    const [connected, setConnected] = useState(false);
     const [message, setMessage] = useState("");
     const [roomList, setRoomList] = useState([]);
     const [roomName, setRoomName] = useState("");
@@ -45,6 +46,7 @@ function App() {
         if(token) {
             if(!client.current) { client.current = stompFactory(token, url); }
             client.current.activate();
+            console.log(client.current);
         }
     };
 
@@ -107,6 +109,7 @@ function App() {
         });
 
         console.log(rooms);
+        console.log(Object.values(rooms.data));
         setRoomList((rooms.data === "no room matches") ? [] : rooms.data);
     }
 
@@ -150,6 +153,7 @@ function App() {
             },
             onDisconnect: () => {
                 setChatting([]);
+                setConnected(false);
                 setMessage("");
                 setRoomName("");
             },
@@ -159,9 +163,8 @@ function App() {
             }
         });
 
-        stompClient.onConnect = (frame) => {
-            subscribeRoom(stompClient, url);
-            getChat(url);
+        stompClient.onConnect = () => {
+            setConnected(true);
         };
 
         window.addEventListener("beforeunload", e => {
@@ -178,6 +181,7 @@ function App() {
 
     const subscribeRoom = (stompClient, url) => {
         const token = localStorage.getItem("token");
+        console.log(`/topic/${url}`);
         stompClient.subscribe(`/topic/${url}`, message => {
             console.log(message);
 
@@ -219,6 +223,13 @@ function App() {
     useEffect(() => {
 
     }, [chatting, message]);
+
+    useEffect(() => {
+        if(connected) {
+            subscribeRoom(client.current, roomName);
+            getChat(roomName);
+        }
+    }, [connected]);
 
     return (client.current && client.current.connected) ? <div className="chatRoom">
             <div className="chatRoomHeader">
