@@ -243,7 +243,6 @@ function App() {
                     </button>
                     <h1 class="flex-grow text-center text-xl font-bold">{roomName}</h1>
                 </div>
-                
                 {   
                     Object.values(chatting).map(chat => (
                         <div class="p-4">
@@ -257,7 +256,16 @@ function App() {
                             </div>
                         </div>
                 )) }
+                <div class="mt-4 flex items-center">
+                    <input
+                        type="text"
+                        placeholder="메시지를 입력하세요..."
+                        class="flex-grow p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        onChange={typeMessage}
+                    />
+                    <button class="ml-2 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600" onClick={sendChat}>전송</button>
                 </div>
+            </div>
         </div> :
         <div class="bg-gray-100 flex items-center justify-center min-h-screen">
             {/* 메인 페이지 UI */}

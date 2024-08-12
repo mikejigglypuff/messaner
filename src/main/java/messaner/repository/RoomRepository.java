@@ -13,5 +13,5 @@ public interface RoomRepository {
 
     public boolean deleteRoom(RoomDTO roomDTO);
 
-    public boolean roomExists(RoomDTO roomDTO);
+    public boolean roomExists(String room);
 }

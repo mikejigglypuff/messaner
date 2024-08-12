@@ -1,9 +1,11 @@
 package messaner.service;
 
+import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import messaner.DTO.ChatDTO;
 import messaner.DTO.RoomDTO;
 import messaner.DTO.UserDTO;
+import messaner.factory.GsonFactory;
 import messaner.model.Chat;
 import messaner.model.Room;
 import messaner.model.User;
@@ -33,6 +35,7 @@ public class RepositoryServiceTest {
     private final RepositoryService repositoryService;
     private final Chat[] compChats;
     private final UserDTO createdRoom;
+    private final GsonFactory gsonFactory;
     private final TransactionTemplate transactionTemplate;
     private final List<UserDTO> subscriptionUsers;
     private final List<UserDTO> notSubUsers;
@@ -40,7 +43,11 @@ public class RepositoryServiceTest {
     private final UserDTO subWrongRoomUser;
 
     @Autowired
-    RepositoryServiceTest(RepositoryService repositoryService, TransactionTemplate transactionTemplate) {
+    RepositoryServiceTest(
+            RepositoryService repositoryService,
+            TransactionTemplate transactionTemplate,
+            GsonFactory gsonFactory
+    ) {
         this.repositoryService = repositoryService;
         this.compChats = new Chat[]{
                 new Chat(new ChatDTO(
@@ -50,6 +57,7 @@ public class RepositoryServiceTest {
                         "와구와구프린세스", "인민들에게빵을착취하는사악한요정여왕몰아내자"), "komi", "2024-05-22T00:11:50.101Z"),
         };
         this.createdRoom = new UserDTO("개노잼정령산", "naia");
+        this.gsonFactory = gsonFactory;
         this.transactionTemplate = transactionTemplate;
         this.subscriptionUsers = Arrays.asList(
                 new UserDTO("와구와구프린세스", "erpin"),
@@ -134,30 +142,29 @@ public class RepositoryServiceTest {
     @Test
     public void getAllRooms() {
         assertThatCode(() -> {
-            repositoryService.getRooms(new RoomDTO(""));
+            repositoryService.getRoomsGson(new RoomDTO(""));
         }).doesNotThrowAnyException();
     }
 
     @Test
     public void getChats() {
         RoomDTO roomDTO = new RoomDTO("와구와구프린세스");
-        List<Chat> chats = repositoryService.getChats(roomDTO);
+        String chats = repositoryService.getChatsGson(roomDTO);
 
-        List<Chat> comp = new ArrayList<>(Arrays.asList(compChats));
+        Gson gson = gsonFactory.instantGson();
+        String comp = gson.toJson(new ArrayList<>(Arrays.asList(compChats)));
 
         SoftAssertions soft = new SoftAssertions();
 
-        for(int i = 0; i < chats.size(); i++) {
-            soft.assertThat(chats.get(i)).usingRecursiveComparison().isEqualTo(comp.get(i));
-        }
+        assertThat(chats).isEqualTo(comp);
     }
 
     @Test
     public void getNoChats() {
         RoomDTO roomDTO = new RoomDTO("사료스탕스");
-        List<Chat> chats = repositoryService.getChats(roomDTO);
+        String chats = repositoryService.getChatsGson(roomDTO);
 
-        assertThat(chats.size()).isEqualTo(0);
+        assertThat(chats.length()).isEqualTo(0);
     }
 
     /*

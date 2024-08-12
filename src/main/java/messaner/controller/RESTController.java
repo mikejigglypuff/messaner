@@ -67,10 +67,7 @@ public class RESTController {
             log.info("room: " + userDTO.getRoom() + " user: " + userDTO.getUser());
 
             if (repositoryService.userSubscribed(userDTO)) {
-                List<Chat> chats = repositoryService.getChats(userDTO);
-
-                Gson gson = gsonFactory.instantGson();
-                return gson.toJson(chats);
+                return repositoryService.getChatsGson(userDTO);
             } else {
                 return "/topic/chatting/" + userDTO.getRoom();
             }
@@ -83,10 +80,7 @@ public class RESTController {
     public String searchRooms(@RequestParam(value="name", required = false, defaultValue = "") String name) {
         try {
             String decodeName = UriUtils.decode(name, "UTF-8");
-            List<Room> rooms = repositoryService.getRooms(new RoomDTO(decodeName));
-            Gson gson = gsonFactory.instantGson();
-            System.out.println(gson.toJson(rooms));
-            return gson.toJson(rooms);
+            return repositoryService.getRoomsGson(new RoomDTO(decodeName));
         } catch (NoSuchElementException ne) {
             log.info(ne.getMessage());
             return "no room matches";
