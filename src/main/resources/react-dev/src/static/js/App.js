@@ -231,55 +231,61 @@ function App() {
         }
     }, [connected]);
 
-    return (client.current && client.current.connected) ? <div className="chatRoom">
-            <div className="chatRoomHeader">
-                <button variant="outline">
-                    <ArrowLeftIcon onClick={() => disconnect(roomName)}/>
-                </button>
-                <div className="chatRoomName">{roomName}</div>
-            </div>
-            { Object.values(chatting).map(chat => (
-                <div className="chatRoomBody">
-                    <div className="chatInfo">
-                        <div>JW</div>
-                        <div className="chatWriter">{chat.writer}</div>
-                    </div>
-                    <div className="chatBubble">
-                        <div className="chatMessage">{chat.message}</div>
-                        <div className="chatCreatedAt">{chat.createdAt}</div>
-                    </div>
+    return (client.current && client.current.connected) ?
+        <div class="bg-gray-100 p-4">
+        {/* 채팅방 UI */}
+            <div class="max-w-2xl mx-auto bg-white shadow-lg rounded-lg">
+                <div class="flex items-center p-4 border-b">
+                    <button class="p-2 rounded-full hover:bg-gray-200" onClick={() => disconnect(roomName)}>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <h1 class="flex-grow text-center text-xl font-bold">{roomName}</h1>
                 </div>
-            ))}
-            <div className="chatRoomFooter">
-                <input className="msagInput" placeholder="Type a message" onChange={typeMessage} />
-                <button size="icon" onClick={sendChat}>
-                    <SendIcon />
-                    <span className="msgSendButton">Send</span>
-                </button>
-            </div>
-        </div> : <div className="mainPage">
-                    <div className="mainHeader">
-                        <div className="mainTitle">Chat Rooms</div>
-                        <div className="searchRoom">
-                            <input placeholder="채널명을 입력하세요" onChange={typeRoomName} />
-                            <button id="searchRoomBtn" onClick={getRooms}>Search</button>
-                            <button id="createRoomBtn" onClick={createChannel}>채널 생성</button>
-                        </div>
-                    </div>
-                    <div className="roomList">
-                        { Object.values(roomList).map(val => (
-                            <label onClick={() => connect(val.name)}>
-                                <div className="roomInfo" key={val.name}>
-                                    <div className="roomName">{val.name}</div>
-                                    <div className="roomMember">
-                                        <UserIcon />
-                                        <span className="roomMemberNum">{val.subscribers.length}</span>
-                                    </div>
+                
+                {   
+                    Object.values(chatting).map(chat => (
+                        <div class="p-4">
+                            <div class="text-center text-gray-500 mb-4">YYYY-MM-dd</div>
+                            <div class="space-y-4">
+                                <div class="flex items-center">
+                                    <div class="font-bold">{chat.writer}</div>
+                                    <div class="flex-grow mx-2 p-2 bg-gray-200 rounded">{chat.message}</div>
+                                    <div class="text-gray-500">{chat.createdAt}</div>
                                 </div>
-                            </label>
-                        )) } 
-                    </div>
-                </div>;
+                            </div>
+                        </div>
+                )) }
+                </div>
+        </div> :
+        <div class="bg-gray-100 flex items-center justify-center min-h-screen">
+            {/* 메인 페이지 UI */}
+            <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl">
+                <h1 class="text-3xl font-bold text-center mb-6">Title</h1>
+                <div class="flex items-center justify-center mb-6">
+                    <input type="text" placeholder="채널명을 입력하세요" class="border border-gray-300 rounded-lg p-2 w-full max-w-md" onChange={typeRoomName} />
+                </div>
+                <div class="flex items-center justify-center space-x-4 mb-6">
+                    <button class="bg-green-500 text-white px-4 py-2 rounded-lg" onClick={getRooms}>Search</button>
+                    <button class="bg-green-500 text-white px-4 py-2 rounded-lg" onClick={createChannel}>채팅방 생성</button>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {
+                        Object.values(roomList).map(val => (
+                        <div class="bg-green-100 border border-green-500 rounded-lg p-4 flex justify-between items-center" onClick={() => connect(val.name)}>
+                            <span>{val.name}</span>
+                            <div class="flex items-center space-x-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v4a6 6 0 0012 0V8a6 6 0 00-6-6zM8 8a2 2 0 114 0 2 2 0 01-4 0zm-2 6a4 4 0 018 0H6z" clip-rule="evenodd" />
+                                </svg>
+                                <span>{val.subscribers.length}</span>
+                            </div>
+                        </div>
+                    )) }
+                </div>
+             </div>
+        </div>
 }
 
 function UserIcon(props) {
