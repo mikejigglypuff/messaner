@@ -1,20 +1,12 @@
 package messaner.model;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 import messaner.DTO.ChatDTO;
-import org.springframework.format.annotation.DateTimeFormat;
 
-import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.FormatStyle;
-import java.util.Date;
 import java.util.Locale;
 
 
@@ -24,6 +16,15 @@ public class Chat {
     private String writer;
     private String message;
     private Instant createdAt;
+
+    public Chat(){}
+
+    public Chat(ChatDTO chatDTO, String user) {
+        room = chatDTO.getRoom();
+        writer = user;
+        message = chatDTO.getChat();
+        createdAt = Instant.now();
+    }
 
     public Chat(ChatDTO chatDTO, String user, Instant date) {
         room = chatDTO.getRoom();
@@ -38,15 +39,6 @@ public class Chat {
         message = chatDTO.getChat();
         createdAt = Instant.parse(date);
     }
-
-    public Chat(ChatDTO chatDTO, String user) {
-        room = chatDTO.getRoom();
-        writer = user;
-        message = chatDTO.getChat();
-        createdAt = Instant.now();
-    }
-
-    public Chat(){}
 
     @Override
     public boolean equals(Object o) {

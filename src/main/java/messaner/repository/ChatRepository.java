@@ -8,7 +8,6 @@ import java.time.Instant;
 import java.util.List;
 
 public interface ChatRepository {
-    public boolean insertChat(ChatDTO chatDTO, String user, Instant dateTime);
-
     public List<Chat> getChats(RoomDTO roomDTO);
+    public boolean insertChat(ChatDTO chatDTO, String user, Instant dateTime);
 }

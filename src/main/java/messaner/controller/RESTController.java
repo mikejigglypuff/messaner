@@ -1,43 +1,26 @@
 package messaner.controller;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import messaner.DTO.RoomDTO;
 import messaner.DTO.UserDTO;
-import messaner.GsonInstantAdapter;
-import messaner.JwtProvider;
-import messaner.WSChannelInterceptor;
-import messaner.factory.GsonFactory;
-import messaner.model.Chat;
-import messaner.model.Room;
+import messaner.Jwt.JwtParser;
 import messaner.service.RepositoryService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriUtils;
-
-import java.time.Instant;
 import java.util.*;
 
 @Slf4j
 @Controller
 @RequiredArgsConstructor
 public class RESTController {
+
+    private final JwtParser jwtParser;
     private final RepositoryService repositoryService;
-    private final GsonFactory gsonFactory;
-    private final WSChannelInterceptor channelInterceptor;
-    private final JwtProvider jwtProvider;
 
     @PostMapping("/room/create")
     @ResponseBody
@@ -63,7 +46,7 @@ public class RESTController {
         String session = req.getHeader("Authorization");
 
         if(session != null) {
-            UserDTO userDTO = new UserDTO(room, jwtProvider.getUserId(session));
+            UserDTO userDTO = new UserDTO(room, jwtParser.getUserId(session));
             log.info("room: " + userDTO.getRoom() + " user: " + userDTO.getUser());
 
             if (repositoryService.userSubscribed(userDTO)) {

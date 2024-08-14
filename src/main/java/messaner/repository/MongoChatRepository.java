@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import messaner.DTO.ChatDTO;
 import messaner.DTO.RoomDTO;
 import messaner.DTO.UserDTO;
-import messaner.config.MongoConfig;
 import messaner.model.Chat;
 import messaner.model.Room;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +40,16 @@ public class MongoChatRepository implements ChatRepository{
 
     @Override
     @Transactional
+    public List<Chat> getChats(RoomDTO roomDTO) throws NoSuchElementException {
+        Query query = new Query(Criteria.where("name").is(roomDTO.getRoom()));
+        Room curRoom = template.findOne(query, Room.class);
+
+        if(curRoom == null) throw new NoSuchElementException();
+        return curRoom.getChats();
+    }
+
+    @Override
+    @Transactional
     public boolean insertChat(ChatDTO chatDTO, String user, Instant dateTime) {
         UserDTO userDTO = new UserDTO(chatDTO.getRoom(), user);
 
@@ -68,15 +77,5 @@ public class MongoChatRepository implements ChatRepository{
             return false;
         }
         return true;
-    }
-
-    @Override
-    @Transactional
-    public List<Chat> getChats(RoomDTO roomDTO) throws NoSuchElementException {
-        Query query = new Query(Criteria.where("name").is(roomDTO.getRoom()));
-        Room curRoom = template.findOne(query, Room.class);
-
-        if(curRoom == null) throw new NoSuchElementException();
-        return curRoom.getChats();
     }
 }

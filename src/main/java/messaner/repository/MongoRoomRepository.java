@@ -31,6 +31,17 @@ public class MongoRoomRepository implements RoomRepository {
 
     @Override
     @Transactional
+    public List<Room> getRooms(RoomDTO roomDTO) {
+        Query query = new Query(Criteria.where("name").regex(roomDTO.getRoom(), null));
+        query.with(Sort.by(Sort.Order.asc("_id")));
+        List<Room> curRoom = template.find(query, Room.class);
+
+        if(curRoom.isEmpty()) { throw new NoSuchElementException(); }
+        return curRoom;
+    }
+
+    @Override
+    @Transactional
     public boolean insertRoom(UserDTO userDTO) {
         try {
             List<User> users = new ArrayList<>();
@@ -46,18 +57,7 @@ public class MongoRoomRepository implements RoomRepository {
 
     @Override
     @Transactional
-    public List<Room> getRooms(RoomDTO roomDTO) {
-        Query query = new Query(Criteria.where("name").regex(roomDTO.getRoom(), null));
-        query.with(Sort.by(Sort.Order.asc("_id")));
-        List<Room> curRoom = template.find(query, Room.class);
-
-        if(curRoom.isEmpty()) { throw new NoSuchElementException(); }
-        return curRoom;
-    }
-
-    @Override
-    @Transactional
-    public boolean deleteRoom(RoomDTO roomDTO) {
+    public boolean removeRoom(RoomDTO roomDTO) {
         Query query = new Query(Criteria.where("name").is(roomDTO.getRoom()));
         try {
             template.remove(query, Room.class);

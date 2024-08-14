@@ -36,6 +36,20 @@ public class MongoUserRepository implements UserRepository {
 
     @Override
     @Transactional
+    public List<User> getSubscribers(String room) {
+        Query query = new Query(
+                Criteria.where("_id").is(room)
+        );
+        query.fields().include("subscribers");
+
+        if(roomRepository.roomExists(room)) {
+            return template.findOne(query, Room.class).getSubscribers();
+        }
+        return new ArrayList<>();
+    }
+
+    @Override
+    @Transactional
     public boolean insertSub(UserDTO userDTO) {
         try {
             if(!roomRepository.roomExists(userDTO.getRoom())) throw new NoSuchElementException();
@@ -53,16 +67,20 @@ public class MongoUserRepository implements UserRepository {
 
     @Override
     @Transactional
-    public List<User> getSubscribers(String room) {
-        Query query = new Query(
-                Criteria.where("_id").is(room)
+    public boolean isSubscribed(UserDTO userDTO) {
+        Aggregation agg = Aggregation.newAggregation(
+                match(Criteria.where("_id").is(userDTO.getRoom())),
+                unwind("subscribers"),
+                match(Criteria.where("subscribers.name").is(userDTO.getUser())),
+                project().and("subscribers.name").as("name")
         );
-        query.fields().include("subscribers");
 
-        if(roomRepository.roomExists(room)) {
-            return template.findOne(query, Room.class).getSubscribers();
+        AggregationResults<AggNameResult> result = template.aggregate(agg, "room", AggNameResult.class);
+        List<AggNameResult> mappedResult = result.getMappedResults();
+        for(AggNameResult r : mappedResult) {
+            log.info(r.toString());
         }
-        return new ArrayList<>();
+        return !mappedResult.isEmpty();
     }
 
     @Override
@@ -98,21 +116,5 @@ public class MongoUserRepository implements UserRepository {
         return template.exists(query, Room.class);
     }
 
-    @Override
-    @Transactional
-    public boolean isSubscribed(UserDTO userDTO) {
-        Aggregation agg = Aggregation.newAggregation(
-                match(Criteria.where("_id").is(userDTO.getRoom())),
-                unwind("subscribers"),
-                match(Criteria.where("subscribers.name").is(userDTO.getUser())),
-                project().and("subscribers.name").as("name")
-        );
 
-        AggregationResults<AggNameResult> result = template.aggregate(agg, "room", AggNameResult.class);
-        List<AggNameResult> mappedResult = result.getMappedResults();
-        for(AggNameResult r : mappedResult) {
-            log.info(r.toString());
-        }
-        return !mappedResult.isEmpty();
-    }
 }

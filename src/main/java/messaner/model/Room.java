@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "room")
@@ -16,8 +15,9 @@ import java.util.List;
 public class Room {
     @Id
     private String name;
-    private List<User> subscribers;
     private List<Chat> chats;
+    private List<User> subscribers;
+
 
     @Autowired
     public Room(RoomDTO roomDTO, List<User> userList, List<Chat> chatList) {

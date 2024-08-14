@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import messaner.DTO.ChatDTO;
 import messaner.DTO.RoomDTO;
 import messaner.DTO.UserDTO;
-import messaner.factory.GsonFactory;
+import messaner.GsonFactory;
 import messaner.model.Chat;
 import messaner.model.Room;
 import messaner.model.User;
@@ -16,7 +16,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -33,6 +32,7 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 @SpringBootTest
 public class RepositoryServiceTest {
     private final RepositoryService repositoryService;
+    private final StompRepoService stompRepoService;
     private final Chat[] compChats;
     private final UserDTO createdRoom;
     private final GsonFactory gsonFactory;
@@ -45,10 +45,12 @@ public class RepositoryServiceTest {
     @Autowired
     RepositoryServiceTest(
             RepositoryService repositoryService,
+            StompRepoService stompRepoService,
             TransactionTemplate transactionTemplate,
             GsonFactory gsonFactory
     ) {
         this.repositoryService = repositoryService;
+        this.stompRepoService = stompRepoService;
         this.compChats = new Chat[]{
                 new Chat(new ChatDTO(
                         "와구와구프린세스", "나는배가고프다"), "erpin", "2024-05-21T23:17:43.927Z"
@@ -80,7 +82,7 @@ public class RepositoryServiceTest {
         Instant dateTime = Instant.now();
 
         transactionTemplate.execute(status -> {
-            assertThat(repositoryService.addChat(chatDTO, user, dateTime)).isEqualTo(new Chat(chatDTO, user, dateTime));
+            assertThat(stompRepoService.addChat(chatDTO, user, dateTime)).isEqualTo(new Chat(chatDTO, user, dateTime));
 
             status.setRollbackOnly();
             return null;
@@ -107,7 +109,7 @@ public class RepositoryServiceTest {
         ChatDTO chatDTO = new ChatDTO("요정왕국", "버터는놀려야제맛");
 
         transactionTemplate.execute(status -> {
-            assertThat(repositoryService.addChat(chatDTO, user, null)).isEqualTo(new Chat());
+            assertThat(stompRepoService.addChat(chatDTO, user, null)).isEqualTo(new Chat());
 
             status.setRollbackOnly();
             return null;

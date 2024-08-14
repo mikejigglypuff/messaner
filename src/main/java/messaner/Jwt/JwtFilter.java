@@ -1,4 +1,4 @@
-package messaner;
+package messaner.Jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -6,10 +6,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import messaner.DTO.UserDTO;
-import messaner.service.RepositoryService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -20,14 +16,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtProvider jwtProvider;
-
-    @Autowired
-    public JwtFilter(JwtProvider jwtProvider) {
-        this.jwtProvider = jwtProvider;
-    }
+    private final JwtParser jwtParser;
 
     @Override
     protected void doFilterInternal(
@@ -36,17 +29,15 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if(!isWebSocketRequest(request)) {
             String token = request.getHeader(HttpHeaders.AUTHORIZATION);
-
             log.info("Authorization: " + token);
 
             String username = null;
-
             if (token != null) {
-                username = jwtProvider.getUserId(token);
+                username = jwtParser.getUserId(token);
             }
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                if (jwtProvider.validateToken(token, username)) {
+                if (jwtParser.validateToken(token, username)) {
                     UsernamePasswordAuthenticationToken UPToken = new UsernamePasswordAuthenticationToken(username, null, null);
                     Authentication authentication = createAuthentication(token);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -61,12 +52,10 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private boolean isWebSocketRequest(HttpServletRequest request) {
         String uri = request.getRequestURI();
-
         return uri.startsWith("/ws") || uri.startsWith("/topic") || uri.startsWith("/queue");
     }
 
     private Authentication createAuthentication(String token) {
-        String userId = jwtProvider.getUserId(token);
-        return new UsernamePasswordAuthenticationToken("userId", userId);
+        return new UsernamePasswordAuthenticationToken("userId", jwtParser.getUserId(token));
     }
 }

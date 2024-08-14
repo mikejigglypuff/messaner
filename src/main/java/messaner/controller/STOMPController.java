@@ -3,34 +3,22 @@ package messaner.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import messaner.DTO.ChatDTO;
-import messaner.DTO.UserDTO;
-import messaner.JwtProvider;
+import messaner.Jwt.JwtParser;
 import messaner.WSChannelInterceptor;
 import messaner.model.Chat;
-import messaner.service.RepositoryService;
+import messaner.service.StompRepoService;
 import org.springframework.messaging.handler.annotation.*;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
-import org.springframework.messaging.simp.annotation.SubscribeMapping;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.util.UriUtils;
-
-import java.time.Instant;
-import java.util.*;
 
 @Slf4j
 @Controller
 @RequiredArgsConstructor
 public class STOMPController {
 
-    private final RepositoryService repositoryService;
-    private final SimpMessagingTemplate messagingTemplate;
-    private final JwtProvider jwtProvider;
     private final WSChannelInterceptor channelInterceptor;
+    private final JwtParser jwtParser;
+    private final StompRepoService repositoryService;
 
     @MessageMapping("/{room}")
     @SendTo("/topic/{room}")
@@ -43,10 +31,8 @@ public class STOMPController {
         log.info("token: " + token + ", sessionID: " + session);
 
         if (session != null) {
-            String user = jwtProvider.getUserId(token);
-            Instant date = Instant.now();
-
-            return repositoryService.addChat(chatDTO, user, date);
+            String user = jwtParser.getUserId(token);
+            return repositoryService.addChat(chatDTO, user, null);
         }
 
         return null;

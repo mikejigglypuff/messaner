@@ -1,4 +1,4 @@
-package messaner.factory;
+package messaner;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

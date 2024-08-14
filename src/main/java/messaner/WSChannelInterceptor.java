@@ -1,8 +1,9 @@
 package messaner;
 
-import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import messaner.DTO.UserDTO;
+import messaner.Jwt.JwtParser;
+import messaner.Jwt.JwtProvider;
 import messaner.service.RepositoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.Message;
@@ -11,12 +12,8 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.WebSocketSession;
-import org.springframework.web.util.UriUtils;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,13 +22,21 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WSChannelInterceptor implements ChannelInterceptor {
     private final RepositoryService repositoryService;
     private final JwtProvider jwtProvider;
+    private final JwtParser jwtParser;
     private final Map<String, String> sessions; //key: userId, val: sessionId
 
     @Autowired
-    public WSChannelInterceptor(RepositoryService repositoryService, JwtProvider jwtProvider) {
+    public WSChannelInterceptor(
+            RepositoryService repositoryService, JwtProvider jwtProvider, JwtParser jwtParser
+    ) {
         this.repositoryService = repositoryService;
         this.jwtProvider = jwtProvider;
-        this.sessions = new HashMap<>();
+        this.jwtParser = jwtParser;
+        this.sessions = new ConcurrentHashMap<>();
+    }
+
+    public String getSession(String token) {
+        return sessions.get(jwtParser.getUserId(token));
     }
 
     @Override
@@ -49,12 +54,12 @@ public class WSChannelInterceptor implements ChannelInterceptor {
                 if(dest != null) {
                     String[] uri = dest.split("/");
 
-                    String user = jwtProvider.getUserId(token);
+                    String user = jwtParser.getUserId(token);
                     log.info("user: " + user);
 
                     if (StompCommand.SUBSCRIBE.equals(command)) {
                         repositoryService.addSubscription(new UserDTO(uri[uri.length - 1], user));
-                        String sessionId = jwtProvider.getSessionId(token);
+                        String sessionId = jwtParser.getSessionId(token);
                         sessions.put(user, sessionId);
 
                     } else if (StompCommand.UNSUBSCRIBE.equals(command)) {
@@ -77,7 +82,4 @@ public class WSChannelInterceptor implements ChannelInterceptor {
         return message;
     }
 
-    public String getSession(String token) {
-        return sessions.get(jwtProvider.getUserId(token));
-    }
 }
