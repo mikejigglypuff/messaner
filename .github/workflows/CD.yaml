@@ -18,9 +18,9 @@ jobs:
 
     - name: Set JDK
       uses: actions/setup-java@v4
-        distribution: 'oracle'
-        java-version: 21
-        architecture: x64
+      - distribution: 'oracle'
+      - java-version: 21
+      - architecture: x64
 
     - name: Install Spring dependencies
       run: ./gradlew build
