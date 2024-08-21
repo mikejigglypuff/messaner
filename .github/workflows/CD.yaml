@@ -30,18 +30,7 @@ jobs:
     - name: Install Spring dependencies
       run: |
         chmod +x ./gradlew
-        ./gradlew build
-
-    - name: Set NodeJS
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18
-
-    - name: Install dependencies
-      run: |
-        chmod +x src/main/resources/react-dev
-        cd src/main/resources/react-dev
-        npm install
+        ./gradlew build --warning-mode all
 
     - name: Copy JAR to EC2
       run: |
