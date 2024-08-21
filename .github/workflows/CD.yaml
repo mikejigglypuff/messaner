@@ -28,7 +28,9 @@ jobs:
         architecture: x64
 
     - name: Install Spring dependencies
-      run: ./gradlew build
+      run: |
+        chmod +x ./gradlew
+        ./gradlew build
 
     - name: Set NodeJS
       uses: actions/setup-node@v4
@@ -36,7 +38,10 @@ jobs:
         node-version: 18
 
     - name: Install dependencies
-      run: cd src/main/resources/react-dev && npm install
+      run: |
+        chmod +x src/main/resources/react-dev
+        cd src/main/resources/react-dev
+        npm install
 
     - name: Copy JAR to EC2
       run: |
