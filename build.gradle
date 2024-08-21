@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.2.3'
 	id 'io.spring.dependency-management' version '1.1.4'
+	id 'checkstyle'
 }
 
 group = 'com.example'
@@ -10,6 +11,11 @@ version = '0.0.1-SNAPSHOT'
 java {
 	sourceCompatibility = JavaVersion.VERSION_21
 	targetCompatibility = JavaVersion.VERSION_21
+}
+
+checkstyle {
+	toolVersion = '10.17.0'
+	configFile = file('google_checks.xml');
 }
 
 configurations {
@@ -62,6 +68,13 @@ tasks.named('test') {
 
 tasks.withType(JavaCompile).configureEach {
 	options.compilerArgs << "-parameters"
+}
+
+tasks.withType(Checkstyle) {
+    reports {
+        xml.required = false
+        html.required = true
+    }
 }
 
 tasks.register('installReact', Exec) {
