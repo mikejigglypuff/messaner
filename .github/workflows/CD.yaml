@@ -13,27 +13,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps: 
-      name: Checkout
+    - name: Checkout
       uses: actions/checkout@v4
 
-      name: Set JDK
+    - name: Set JDK
       uses: actions/setup-java@v4
         distribution: 'oracle'
         java-version: 21
         architecture: x64
 
-      name: Install Spring dependencies
+    - name: Install Spring dependencies
       run: ./gradlew build
 
-      name: Set NodeJS
+    - name: Set NodeJS
       uses: actions/setup-node@v4
       with:
         node-version: 18
 
-      name: Install dependencies
+    - name: Install dependencies
       run: cd src/main/resources/react-dev && npm install
 
-      name: Copy JAR to EC2
+    - name: Copy JAR to EC2
 			env:
 				SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         EC2_HOST: ${{ secrets.EC2_HOST }}
@@ -43,7 +43,7 @@ jobs:
         chmod 600 private_key.pem
         scp -i private_key.pem /build/libs/messaner-0.0.1-SNAPSHOT.jar $EC2_USER@$EC2_HOST:/home/ec2-user/messaner/build/libs
 
-      name: Deploy on EC2 via SSH
+    - name: Deploy on EC2 via SSH
 			env:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         EC2_HOST: ${{ secrets.EC2_HOST }}

@@ -13,17 +13,17 @@ jobs:
     runs-on: ubuntu-latest
   
     steps:
-      name: Checkout
+    - name: Checkout
       uses: actions/checkout@v4
 
-      name: Set NodeJS
+    - name: Set NodeJS
       uses: actions/setup-node@v4
       with:
         node-version: 18
 
-      name: Install dependencies
+    - name: Install dependencies
       run: cd src/main/resources/react-dev && npm install
 
-      name: Run ESLint
+    - name: Run ESLint
       run: npm run lint
 

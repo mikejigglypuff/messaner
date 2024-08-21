@@ -13,24 +13,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps: 
-      name: Checkout
+    - name: Checkout
       uses: actions/checkout@v4
       with:
         fetch-depth: 1
         ref: 'main'
 
-      name: Set JDK
+    - name: Set JDK
       uses: actions/setup-java@v4
         distribution: 'oracle'
         java-version: 21
         architecture: x64
 
-      name: Install dependencies
+    - name: Install dependencies
       run: ./gradlew build
 
-      name: Run test
+    - name: Run test
       run: ./gradlew :test
 
-      name: Run checkstyle
+    - name: Run checkstyle
       run: ./gradlew checkstyleMain
 
