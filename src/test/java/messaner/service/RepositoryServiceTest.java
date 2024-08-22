@@ -53,10 +53,10 @@ public class RepositoryServiceTest {
         this.stompRepoService = stompRepoService;
         this.compChats = new Chat[]{
                 new Chat(new ChatDTO(
-                        "와구와구프린세스", "나는배가고프다"), "erpin", "2024-05-21T23:17:43.927Z"
+                        "나는배가고프다", "와구와구프린세스"), "erpin", "2024-05-21T23:17:43.927Z"
                         ),
                 new Chat(new ChatDTO(
-                        "와구와구프린세스", "인민들에게빵을착취하는사악한요정여왕몰아내자"), "komi", "2024-05-22T00:11:50.101Z"),
+                        "인민들에게빵을착취하는사악한요정여왕몰아내자", "와구와구프린세스"), "komi", "2024-05-22T00:11:50.101Z"),
         };
         this.createdRoom = new UserDTO("개노잼정령산", "naia");
         this.gsonFactory = gsonFactory;
@@ -78,16 +78,14 @@ public class RepositoryServiceTest {
     @ParameterizedTest
     @ValueSource(strings = {"erpin"})
     public void addChat(String user) {
-        ChatDTO chatDTO = new ChatDTO("버터왕국", "버터는놀려야제맛");
+        log.debug(user);
+        ChatDTO chatDTO = new ChatDTO("버터는놀려야제맛", "버터왕국");
         Instant dateTime = Instant.now();
+        Chat comp = new Chat(chatDTO, user, dateTime);
 
-        transactionTemplate.execute(status -> {
-            assertThat(stompRepoService.addChat(chatDTO, user, dateTime)).isEqualTo(new Chat(chatDTO, user, dateTime));
+        Chat chat = stompRepoService.addChat(chatDTO, user, dateTime);
 
-            status.setRollbackOnly();
-            return null;
-        });
-
+        assertThat(chat).isEqualTo(comp);
     }
 
     /*
@@ -103,17 +101,17 @@ public class RepositoryServiceTest {
 
      */
 
+
     @ParameterizedTest
     @ValueSource(strings = {"erpin"})
     public void chatWrongRoom(String user) {
-        ChatDTO chatDTO = new ChatDTO("요정왕국", "버터는놀려야제맛");
+        log.debug(user);
+        ChatDTO chatDTO = new ChatDTO("버터는놀려야제맛", "요정왕국");
+        Chat comp = new Chat();
+        Instant dateTime = Instant.now();
+        Chat chat = stompRepoService.addChat(chatDTO, user, dateTime);
 
-        transactionTemplate.execute(status -> {
-            assertThat(stompRepoService.addChat(chatDTO, user, null)).isEqualTo(new Chat());
-
-            status.setRollbackOnly();
-            return null;
-        });
+        assertThat(chat).isEqualTo(comp);
     }
 
     @ParameterizedTest
@@ -156,8 +154,7 @@ public class RepositoryServiceTest {
         Gson gson = gsonFactory.instantGson();
         String comp = gson.toJson(new ArrayList<>(Arrays.asList(compChats)));
 
-        SoftAssertions soft = new SoftAssertions();
-
+        log.info("chats: " + chats + "\n comp: " + comp);
         assertThat(chats).isEqualTo(comp);
     }
 
@@ -166,7 +163,11 @@ public class RepositoryServiceTest {
         RoomDTO roomDTO = new RoomDTO("사료스탕스");
         String chats = repositoryService.getChatsGson(roomDTO);
 
-        assertThat(chats.length()).isEqualTo(0);
+        Gson gson = gsonFactory.instantGson();
+        String comp = gson.toJson(new ArrayList<>());
+
+        log.info("chats: " + chats + "\n comp: " + comp);
+        assertThat(chats).isEqualTo(comp);
     }
 
     /*
@@ -243,6 +244,7 @@ public class RepositoryServiceTest {
         boolean correctSubscription = true;
         for(UserDTO userDTO : subscriptionUsers) {
             correctSubscription = repositoryService.userSubscribed(userDTO);
+            log.info("user: " + userDTO.getUser() + " subscribed: " + correctSubscription);
         }
         assertTrue(correctSubscription);
     }

@@ -15,7 +15,7 @@ java {
 
 checkstyle {
 	toolVersion = '10.17.0'
-	configFile = file('google_checks.xml');
+	configFile = file("$projectDir/google_checks.xml");
 }
 
 configurations {
@@ -70,11 +70,11 @@ tasks.withType(JavaCompile).configureEach {
 	options.compilerArgs << "-parameters"
 }
 
-tasks.withType(Checkstyle) {
-    reports {
-        xml.required = false
-        html.required = true
-    }
+tasks.withType(Checkstyle).configureEach {
+	reports {
+		xml.required = false
+		html.required = true
+	}
 }
 
 tasks.register('installReact', Exec) {

@@ -12,7 +12,6 @@ import java.util.Locale;
 
 @Getter
 public class Chat {
-    private String room;
     private String writer;
     private String message;
     private Instant createdAt;
@@ -20,21 +19,18 @@ public class Chat {
     public Chat(){}
 
     public Chat(ChatDTO chatDTO, String user) {
-        room = chatDTO.getRoom();
         writer = user;
         message = chatDTO.getChat();
         createdAt = Instant.now();
     }
 
     public Chat(ChatDTO chatDTO, String user, Instant date) {
-        room = chatDTO.getRoom();
         writer = user;
         message = chatDTO.getChat();
         createdAt = date;
     }
 
     public Chat(ChatDTO chatDTO, String user, String date) {
-        room = chatDTO.getRoom();
         writer = user;
         message = chatDTO.getChat();
         createdAt = Instant.parse(date);
@@ -54,7 +50,19 @@ public class Chat {
                 DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)
                         .withLocale(Locale.KOREA)
                         .withZone(ZoneId.systemDefault());
-        return "room: " + room + " writer: " + writer + " msg: " + message +
-                " createdAt: " + dateTimeFormatter.format(createdAt);
+
+        StringBuilder sb = new StringBuilder(" writer: ");
+        if(writer != null) { sb.append(writer); }
+        else { sb.append("null"); }
+        sb.append(" msg: ");
+
+        if(message != null) { sb.append(writer); }
+        else { sb.append("null"); }
+        sb.append(" createdAt: ");
+
+        if(createdAt != null) { sb.append(dateTimeFormatter.format(createdAt)); }
+        else { sb.append("null"); }
+
+        return sb.toString();
     }
 }

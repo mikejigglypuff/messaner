@@ -73,7 +73,7 @@ public class MongoChatRepository implements ChatRepository{
                 bulkOps.execute();
             }
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error(e.toString());
             return false;
         }
         return true;

@@ -16,7 +16,7 @@ public class StompRepoServiceImpl implements StompRepoService{
     @Override
     public Chat addChat(ChatDTO chatDTO, String user, Instant dateTime) {
         return (chatRepository.insertChat(chatDTO, user, dateTime))
-                ? new Chat(chatDTO, user)
+                ? new Chat(chatDTO, user, dateTime)
                 : new Chat();
     }
 }

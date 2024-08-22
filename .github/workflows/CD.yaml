@@ -30,7 +30,7 @@ jobs:
     - name: Install Spring dependencies
       run: |
         chmod +x ./gradlew
-        ./gradlew build --warning-mode all
+        ./gradlew build --warning-mode all --stacktrace
 
     - name: Copy JAR to EC2
       run: |
