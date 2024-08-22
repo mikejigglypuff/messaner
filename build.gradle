@@ -95,9 +95,9 @@ tasks.register('buildReact', Exec) {
 	inputs.dir "$frontendDir"
 	group = BasePlugin.BUILD_GROUP
 	if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
-		commandLine "npm.cmd", "run-script", "build"
+		commandLine "cmd", "/c", "npm audit fix && npm run build"
 	} else {
-		commandLine "npm", "run-script", "build"
+		commandLine "sh", "-c", "npm audit fix && npm run build"
 	}
 }
 
