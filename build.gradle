@@ -82,10 +82,9 @@ tasks.register('installReact', Exec) {
 	inputs.dir "$frontendDir"
 	group = BasePlugin.BUILD_GROUP
 	if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
-		commandLine "npm.cmd", "audit", "fix"
-		commandLine 'npm.cmd', 'install'
+		commandLine "cmd", "/c", "npm audit fix && npm install"
 	} else {
-		commandLine "npm", "audit", "fix" commandLine 'npm', 'install'
+		commandLine "sh", "-c", "npm audit fix && npm install"
 	}
 }
 
@@ -95,9 +94,9 @@ tasks.register('buildReact', Exec) {
 	inputs.dir "$frontendDir"
 	group = BasePlugin.BUILD_GROUP
 	if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
-		commandLine "cmd", "/c", "npm run build --debug"
+		commandLine "cmd", "/c", "npm run build"
 	} else {
-		commandLine "sh", "-c", "npm run build --debug"
+		commandLine "sh", "-c", "npm run build"
 	}
 }
 
