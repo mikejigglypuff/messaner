@@ -25,5 +25,5 @@ jobs:
         run: cd src/main/resources/react-dev && npm install
 
       - name: Run ESLint
-        run: npm run lint
+        run: npx eslint .
 

@@ -27,7 +27,7 @@ jobs:
           architecture: x64
 
       - name: Change file permissions
-        run: chmod +x ./gradle
+        run: chmod +x ./gradlew
 
       - name: Setup Gradle
         run: ./gradlew build --stacktrace
