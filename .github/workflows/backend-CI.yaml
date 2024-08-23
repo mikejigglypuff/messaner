@@ -26,10 +26,10 @@ jobs:
         java-version: 21
         architecture: x64
 
-    - name: Install dependencies
-      run: |
-        chmod +x ./gradlew
-        ./gradlew build --warning-mode all --stacktrace
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        arguments: build
 
     - name: Run test
       run: ./gradlew :test
