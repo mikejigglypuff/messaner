@@ -60,7 +60,7 @@ sourceSets {
 	}
 }
 
-processResources { dependsOn "copyReactBuildFiles" }
+//processResources { dependsOn "copyReactBuildFiles" }
 
 tasks.named('test') {
 	useJUnitPlatform()
