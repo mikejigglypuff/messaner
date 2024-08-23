@@ -26,6 +26,9 @@ jobs:
           java-version: 21
           architecture: x64
 
+      - name: Change file permissions
+        run: chmod +x ./gradle
+
       - name: Setup Gradle
         run: ./gradlew build --stacktrace
 

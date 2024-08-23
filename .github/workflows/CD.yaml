@@ -32,6 +32,9 @@ jobs:
         with:
           node-version: 20
 
+      - name: Change file permissions
+        run: chmod +x ./gradle
+
       - name: Setup Gradle
         run: ./gradlew build --stacktrace
 
