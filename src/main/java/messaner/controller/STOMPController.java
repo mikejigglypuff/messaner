@@ -7,7 +7,12 @@ import messaner.Jwt.JwtParser;
 import messaner.WSChannelInterceptor;
 import messaner.model.Chat;
 import messaner.service.StompRepoService;
-import org.springframework.messaging.handler.annotation.*;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
@@ -16,35 +21,35 @@ import org.springframework.stereotype.Controller;
 @RequiredArgsConstructor
 public class STOMPController {
 
-    private final WSChannelInterceptor channelInterceptor;
-    private final JwtParser jwtParser;
-    private final StompRepoService repositoryService;
+  private final WSChannelInterceptor channelInterceptor;
+  private final JwtParser jwtParser;
+  private final StompRepoService repositoryService;
 
-    @MessageMapping("/{room}")
-    @SendTo("/topic/{room}")
-    public Chat sendChat(
-            @DestinationVariable("room") String room,
-            @Header("Authorization") String token,
-            @Payload ChatDTO chatDTO
-    ) {
-        String session = channelInterceptor.getSession(token);
-        log.info("token: " + token + ", sessionID: " + session);
+  @MessageMapping("/{room}")
+  @SendTo("/topic/{room}")
+  public Chat sendChat(
+      @DestinationVariable("room") String room,
+      @Header("Authorization") String token,
+      @Payload ChatDTO chatDTO
+  ) {
+    String session = channelInterceptor.getSession(token);
+    log.info("token: " + token + ", sessionID: " + session);
 
-        if (session != null) {
-            String user = jwtParser.getUserId(token);
-            return repositoryService.addChat(chatDTO, user, null);
-        }
-
-        return null;
+    if (session != null) {
+      String user = jwtParser.getUserId(token);
+      return repositoryService.addChat(chatDTO, user, null);
     }
 
-    @MessageExceptionHandler
-    @SendToUser("/queue/error")
-    public String exceptionHandle(Throwable e) {
-        String msg = e.getMessage();
+    return null;
+  }
 
-        log.error(msg);
-        return msg;
-    }
+  @MessageExceptionHandler
+  @SendToUser("/queue/error")
+  public String exceptionHandle(Throwable e) {
+    String msg = e.getMessage();
+
+    log.error(msg);
+    return msg;
+  }
 
 }

@@ -2,7 +2,7 @@ name: Backend CI
 
 on:
   pull_request:
-    paths: 
+    paths:
       - 'src/main/java/**'
   push:
     paths:
@@ -12,28 +12,26 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
-    steps: 
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 1
-        ref: 'main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          ref: 'main'
 
-    - name: Set JDK
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'oracle'
-        java-version: 21
-        architecture: x64
+      - name: Set JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'oracle'
+          java-version: 21
+          architecture: x64
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
-      with:
-        arguments: build
+      - name: Setup Gradle
+        run: ./gradlew build --stacktrace
 
-    - name: Run test
-      run: ./gradlew :test
+      - name: Run test
+        run: ./gradlew :test
 
-    - name: Run checkstyle
-      run: ./gradlew checkstyleMain
+      - name: Run checkstyle
+        run: ./gradlew checkstyleMain
 

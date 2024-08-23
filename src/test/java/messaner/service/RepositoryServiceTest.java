@@ -1,6 +1,17 @@
 package messaner.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
+
 import com.google.gson.Gson;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import messaner.DTO.ChatDTO;
 import messaner.DTO.RoomDTO;
@@ -9,7 +20,6 @@ import messaner.GsonFactory;
 import messaner.model.Chat;
 import messaner.model.Room;
 import messaner.model.User;
-import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -19,74 +29,66 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.time.Instant;
-import java.util.*;
-import java.util.stream.Stream;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
-
 @Slf4j
 @SpringBootTest
 public class RepositoryServiceTest {
-    private final RepositoryService repositoryService;
-    private final StompRepoService stompRepoService;
-    private final Chat[] compChats;
-    private final UserDTO createdRoom;
-    private final GsonFactory gsonFactory;
-    private final TransactionTemplate transactionTemplate;
-    private final List<UserDTO> subscriptionUsers;
-    private final List<UserDTO> notSubUsers;
-    private final UserDTO subUnsubUser;
-    private final UserDTO subWrongRoomUser;
 
-    @Autowired
-    RepositoryServiceTest(
-            RepositoryService repositoryService,
-            StompRepoService stompRepoService,
-            TransactionTemplate transactionTemplate,
-            GsonFactory gsonFactory
-    ) {
-        this.repositoryService = repositoryService;
-        this.stompRepoService = stompRepoService;
-        this.compChats = new Chat[]{
-                new Chat(new ChatDTO(
-                        "나는배가고프다", "와구와구프린세스"), "erpin", "2024-05-21T23:17:43.927Z"
-                        ),
-                new Chat(new ChatDTO(
-                        "인민들에게빵을착취하는사악한요정여왕몰아내자", "와구와구프린세스"), "komi", "2024-05-22T00:11:50.101Z"),
-        };
-        this.createdRoom = new UserDTO("개노잼정령산", "naia");
-        this.gsonFactory = gsonFactory;
-        this.transactionTemplate = transactionTemplate;
-        this.subscriptionUsers = Arrays.asList(
-                new UserDTO("와구와구프린세스", "erpin"),
-                new UserDTO("버터왕국", "user_126a1cd5-c91e-4553-8694-baa38ce4a70d"),
-                new UserDTO("사료스탕스", "tig")
-        );
-        this.notSubUsers = Arrays.asList(
-                new UserDTO("와구와구프린세스", "elena"),
-                new UserDTO("사료스탕스", "user_126a1cd5-c91e-4553-8694-badi30aoe1kc")//,
-                //new UserDTO("와구와구프린세스", "komi")
-        );
-        this.subUnsubUser = new UserDTO("롤더체스", "goblinMiko");
-        this.subWrongRoomUser = new UserDTO("롤xh체스", "goblinMiko");
-    }
+  private final RepositoryService repositoryService;
+  private final StompRepoService stompRepoService;
+  private final Chat[] compChats;
+  private final UserDTO createdRoom;
+  private final GsonFactory gsonFactory;
+  private final TransactionTemplate transactionTemplate;
+  private final List<UserDTO> subscriptionUsers;
+  private final List<UserDTO> notSubUsers;
+  private final UserDTO subUnsubUser;
+  private final UserDTO subWrongRoomUser;
 
-    @ParameterizedTest
-    @ValueSource(strings = {"erpin"})
-    public void addChat(String user) {
-        log.debug(user);
-        ChatDTO chatDTO = new ChatDTO("버터는놀려야제맛", "버터왕국");
-        Instant dateTime = Instant.now();
-        Chat comp = new Chat(chatDTO, user, dateTime);
+  @Autowired
+  RepositoryServiceTest(
+      RepositoryService repositoryService,
+      StompRepoService stompRepoService,
+      TransactionTemplate transactionTemplate,
+      GsonFactory gsonFactory
+  ) {
+    this.repositoryService = repositoryService;
+    this.stompRepoService = stompRepoService;
+    this.compChats = new Chat[]{
+        new Chat(new ChatDTO(
+            "나는배가고프다", "와구와구프린세스"), "erpin", "2024-05-21T23:17:43.927Z"
+        ),
+        new Chat(new ChatDTO(
+            "인민들에게빵을착취하는사악한요정여왕몰아내자", "와구와구프린세스"), "komi", "2024-05-22T00:11:50.101Z"),
+    };
+    this.createdRoom = new UserDTO("개노잼정령산", "naia");
+    this.gsonFactory = gsonFactory;
+    this.transactionTemplate = transactionTemplate;
+    this.subscriptionUsers = Arrays.asList(
+        new UserDTO("와구와구프린세스", "erpin"),
+        new UserDTO("버터왕국", "user_126a1cd5-c91e-4553-8694-baa38ce4a70d"),
+        new UserDTO("사료스탕스", "tig")
+    );
+    this.notSubUsers = Arrays.asList(
+        new UserDTO("와구와구프린세스", "elena"),
+        new UserDTO("사료스탕스", "user_126a1cd5-c91e-4553-8694-badi30aoe1kc")//,
+        //new UserDTO("와구와구프린세스", "komi")
+    );
+    this.subUnsubUser = new UserDTO("롤더체스", "goblinMiko");
+    this.subWrongRoomUser = new UserDTO("롤xh체스", "goblinMiko");
+  }
 
-        Chat chat = stompRepoService.addChat(chatDTO, user, dateTime);
+  @ParameterizedTest
+  @ValueSource(strings = {"erpin"})
+  public void addChat(String user) {
+    log.debug(user);
+    ChatDTO chatDTO = new ChatDTO("버터는놀려야제맛", "버터왕국");
+    Instant dateTime = Instant.now();
+    Chat comp = new Chat(chatDTO, user, dateTime);
 
-        assertThat(chat).isEqualTo(comp);
-    }
+    Chat chat = stompRepoService.addChat(chatDTO, user, dateTime);
+
+    assertThat(chat).isEqualTo(comp);
+  }
 
     /*
     @Test
@@ -102,73 +104,73 @@ public class RepositoryServiceTest {
      */
 
 
-    @ParameterizedTest
-    @ValueSource(strings = {"erpin"})
-    public void chatWrongRoom(String user) {
-        log.debug(user);
-        ChatDTO chatDTO = new ChatDTO("버터는놀려야제맛", "요정왕국");
-        Chat comp = new Chat();
-        Instant dateTime = Instant.now();
-        Chat chat = stompRepoService.addChat(chatDTO, user, dateTime);
+  @ParameterizedTest
+  @ValueSource(strings = {"erpin"})
+  public void chatWrongRoom(String user) {
+    log.debug(user);
+    ChatDTO chatDTO = new ChatDTO("버터는놀려야제맛", "요정왕국");
+    Chat comp = new Chat();
+    Instant dateTime = Instant.now();
+    Chat chat = stompRepoService.addChat(chatDTO, user, dateTime);
 
-        assertThat(chat).isEqualTo(comp);
+    assertThat(chat).isEqualTo(comp);
+  }
+
+  @ParameterizedTest
+  @MethodSource("originRooms")
+  public void createChannel(List<Room> originRooms) {
+    transactionTemplate.execute(status -> {
+      assertTrue(repositoryService.createChannel(createdRoom));
+
+      status.setRollbackOnly();
+      return null;
+    });
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"user_aa8c4b16-8320-4cd1-897d-ceea077d6b46"})
+  public void createUser(String comp) {
+    String randID = repositoryService.createUser();
+    assertThat(randID.charAt(4)).isEqualTo('_');
+    assertThat(randID.length()).isEqualTo(41);
+
+    for (int i = 0; i < 1000; i++) {
+      assertThat(randID).isNotEqualTo(comp);
+      randID = repositoryService.createUser();
     }
 
-    @ParameterizedTest
-    @MethodSource("originRooms")
-    public void createChannel(List<Room> originRooms) {
-        transactionTemplate.execute(status -> {
-            assertTrue(repositoryService.createChannel(createdRoom));
+  }
 
-            status.setRollbackOnly();
-            return null;
-        });
-    }
+  @Test
+  public void getAllRooms() {
+    assertThatCode(() -> {
+      repositoryService.getRoomsGson(new RoomDTO(""));
+    }).doesNotThrowAnyException();
+  }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"user_aa8c4b16-8320-4cd1-897d-ceea077d6b46"})
-    public void createUser(String comp) {
-        String randID = repositoryService.createUser();
-        assertThat(randID.charAt(4)).isEqualTo('_');
-        assertThat(randID.length()).isEqualTo(41);
+  @Test
+  public void getChats() {
+    RoomDTO roomDTO = new RoomDTO("와구와구프린세스");
+    String chats = repositoryService.getChatsGson(roomDTO);
 
-        for(int i = 0; i < 1000; i++) {
-            assertThat(randID).isNotEqualTo(comp);
-            randID = repositoryService.createUser();
-        }
+    Gson gson = gsonFactory.instantGson();
+    String comp = gson.toJson(new ArrayList<>(Arrays.asList(compChats)));
 
-    }
+    log.info("chats: " + chats + "\n comp: " + comp);
+    assertThat(chats).isEqualTo(comp);
+  }
 
-    @Test
-    public void getAllRooms() {
-        assertThatCode(() -> {
-            repositoryService.getRoomsGson(new RoomDTO(""));
-        }).doesNotThrowAnyException();
-    }
+  @Test
+  public void getNoChats() {
+    RoomDTO roomDTO = new RoomDTO("사료스탕스");
+    String chats = repositoryService.getChatsGson(roomDTO);
 
-    @Test
-    public void getChats() {
-        RoomDTO roomDTO = new RoomDTO("와구와구프린세스");
-        String chats = repositoryService.getChatsGson(roomDTO);
+    Gson gson = gsonFactory.instantGson();
+    String comp = gson.toJson(new ArrayList<>());
 
-        Gson gson = gsonFactory.instantGson();
-        String comp = gson.toJson(new ArrayList<>(Arrays.asList(compChats)));
-
-        log.info("chats: " + chats + "\n comp: " + comp);
-        assertThat(chats).isEqualTo(comp);
-    }
-
-    @Test
-    public void getNoChats() {
-        RoomDTO roomDTO = new RoomDTO("사료스탕스");
-        String chats = repositoryService.getChatsGson(roomDTO);
-
-        Gson gson = gsonFactory.instantGson();
-        String comp = gson.toJson(new ArrayList<>());
-
-        log.info("chats: " + chats + "\n comp: " + comp);
-        assertThat(chats).isEqualTo(comp);
-    }
+    log.info("chats: " + chats + "\n comp: " + comp);
+    assertThat(chats).isEqualTo(comp);
+  }
 
     /*
     @Test
@@ -183,121 +185,121 @@ public class RepositoryServiceTest {
 
      */
 
-    @Test
-    public void removeSubscription() {
-        UserDTO userDTO = new UserDTO("와구와구프린세스", "erpin");
+  @Test
+  public void removeSubscription() {
+    UserDTO userDTO = new UserDTO("와구와구프린세스", "erpin");
 
-        transactionTemplate.execute(status -> {
-            assertTrue(repositoryService.removeSubscription(userDTO));
+    transactionTemplate.execute(status -> {
+      assertTrue(repositoryService.removeSubscription(userDTO));
 
-            status.setRollbackOnly();
-            return null;
-        });
+      status.setRollbackOnly();
+      return null;
+    });
+  }
+
+  @ParameterizedTest()
+  @MethodSource("originRooms")
+  public void removeChannel(List<Room> originRooms) {
+    Room deleteRoom = originRooms.get(0);
+
+    transactionTemplate.execute(status -> {
+      assertThat(repositoryService.removeChannel(new RoomDTO(deleteRoom.getName()))).isTrue();
+
+      status.setRollbackOnly();
+      return null;
+    });
+  }
+
+  @Test
+  public void subWrongRoom() {
+    transactionTemplate.execute(status -> {
+      assertFalse(repositoryService.addSubscription(subWrongRoomUser));
+
+      status.setRollbackOnly();
+      return null;
+    });
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"erpin"})
+  public void userAlreadyExists(String user) {
+    assertTrue(repositoryService.userAlreadyExists(user));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"butter"})
+  public void userNotExists(String user) {
+    assertFalse(repositoryService.userAlreadyExists(user));
+  }
+
+  @Test
+  public void userNotSubscribed() {
+    boolean checkNotSub = true;
+    for (UserDTO userDTO : notSubUsers) {
+      checkNotSub = !repositoryService.userSubscribed(userDTO);
     }
+    assertTrue(checkNotSub);
+  }
 
-    @ParameterizedTest()
-    @MethodSource("originRooms")
-    public void removeChannel(List<Room> originRooms) {
-        Room deleteRoom = originRooms.get(0);
-
-        transactionTemplate.execute(status -> {
-            assertThat(repositoryService.removeChannel(new RoomDTO(deleteRoom.getName()))).isTrue();
-
-            status.setRollbackOnly();
-            return null;
-        });
+  @Test
+  public void userSubscribed() {
+    boolean correctSubscription = true;
+    for (UserDTO userDTO : subscriptionUsers) {
+      correctSubscription = repositoryService.userSubscribed(userDTO);
+      log.info("user: " + userDTO.getUser() + " subscribed: " + correctSubscription);
     }
+    assertTrue(correctSubscription);
+  }
 
-    @Test
-    public void subWrongRoom() {
-        transactionTemplate.execute(status -> {
-            assertFalse(repositoryService.addSubscription(subWrongRoomUser));
+  static Stream<Arguments> originRooms() {
+    String[] dates = new String[]{"2024-05-21T23:17:43.927Z", "2024-05-22T00:11:50.101Z"};
 
-            status.setRollbackOnly();
-            return null;
-        });
-    }
+    RoomDTO roomDTO1 = new RoomDTO("버터왕국");
+    RoomDTO roomDTO2 = new RoomDTO("사료스탕스");
+    RoomDTO roomDTO3 = new RoomDTO("와구와구프린세스");
+    RoomDTO roomDTO4 = new RoomDTO("롤더체스");
 
-    @ParameterizedTest
-    @ValueSource(strings = {"erpin"})
-    public void userAlreadyExists(String user) {
-        assertTrue(repositoryService.userAlreadyExists(user));
-    }
+    UserDTO userDTO1 = new UserDTO("버터왕국", "user_126a1cd5-c91e-4553-8694-baa38ce4a70d");
+    UserDTO userDTO2 = new UserDTO("사료스탕스", "user_126a1cd5-c91e-4553-8694-baa38ce4a70d");
+    UserDTO userDTO3 = new UserDTO("와구와구프린세스", "user_126a1cd5-c91e-4553-8694-baa38ce4a70d");
+    UserDTO userDTO4 = new UserDTO("롤더체스", "user_126a1cd5-c91e-4553-8694-baa38ce4a70d");
+    UserDTO erpin = new UserDTO("와구와구프린세스", "erpin");
+    UserDTO komi = new UserDTO("와구와구프린세스", "komi");
 
-    @ParameterizedTest
-    @ValueSource(strings = {"butter"})
-    public void userNotExists(String user) {
-        assertFalse(repositoryService.userAlreadyExists(user));
-    }
+    ChatDTO chatDTO1 = new ChatDTO("와구와구프린세스", "나는배가고프다");
+    ChatDTO chatDTO2 = new ChatDTO("와구와구프린세스", "인민들에게빵을착취하는사악한요정여왕몰아내자");
 
-    @Test
-    public void userNotSubscribed() {
-        boolean checkNotSub = true;
-        for(UserDTO userDTO : notSubUsers) {
-            checkNotSub = !repositoryService.userSubscribed(userDTO);
-        }
-        assertTrue(checkNotSub);
-    }
+    List<User> userList1 = new ArrayList<>();
+    List<User> userList2 = new ArrayList<>();
+    List<User> userList3 = new ArrayList<>();
+    List<User> userList4 = new ArrayList<>();
 
-    @Test
-    public void userSubscribed() {
-        boolean correctSubscription = true;
-        for(UserDTO userDTO : subscriptionUsers) {
-            correctSubscription = repositoryService.userSubscribed(userDTO);
-            log.info("user: " + userDTO.getUser() + " subscribed: " + correctSubscription);
-        }
-        assertTrue(correctSubscription);
-    }
+    List<Chat> chatList1 = new ArrayList<>();
+    List<Chat> chatList2 = new ArrayList<>();
+    List<Chat> chatList3 = new ArrayList<>();
+    List<Chat> chatList4 = new ArrayList<>();
 
-    static Stream<Arguments> originRooms() {
-        String[] dates = new String[]{"2024-05-21T23:17:43.927Z", "2024-05-22T00:11:50.101Z"};
+    chatList2.add(new Chat(chatDTO1, "와구와구프린세스", dates[0]));
+    chatList3.add(new Chat(chatDTO2, "와구와구프린세스", dates[1]));
+    chatList4.add(new Chat(chatDTO1, "와구와구프린세스", dates[0]));
+    chatList4.add(new Chat(chatDTO2, "와구와구프린세스", dates[1]));
 
-        RoomDTO roomDTO1 = new RoomDTO("버터왕국");
-        RoomDTO roomDTO2 = new RoomDTO("사료스탕스");
-        RoomDTO roomDTO3 = new RoomDTO("와구와구프린세스");
-        RoomDTO roomDTO4 = new RoomDTO("롤더체스");
+    userList1.add(new User(userDTO1, chatList1));
+    userList2.add(new User(userDTO2, chatList1));
+    userList3.add(new User(userDTO3, chatList1));
+    userList3.add(new User(erpin, chatList2));
+    userList3.add(new User(komi, chatList3));
+    userList4.add(new User(userDTO4, chatList1));
 
-        UserDTO userDTO1 = new UserDTO("버터왕국", "user_126a1cd5-c91e-4553-8694-baa38ce4a70d");
-        UserDTO userDTO2 = new UserDTO("사료스탕스", "user_126a1cd5-c91e-4553-8694-baa38ce4a70d");
-        UserDTO userDTO3 = new UserDTO("와구와구프린세스", "user_126a1cd5-c91e-4553-8694-baa38ce4a70d");
-        UserDTO userDTO4 = new UserDTO("롤더체스", "user_126a1cd5-c91e-4553-8694-baa38ce4a70d");
-        UserDTO erpin = new UserDTO("와구와구프린세스", "erpin");
-        UserDTO komi = new UserDTO("와구와구프린세스", "komi");
+    List<Room> rooms = new ArrayList<>();
 
-        ChatDTO chatDTO1 = new ChatDTO("와구와구프린세스", "나는배가고프다");
-        ChatDTO chatDTO2 = new ChatDTO("와구와구프린세스", "인민들에게빵을착취하는사악한요정여왕몰아내자");
+    rooms.add(new Room(roomDTO1, userList1, chatList1));
+    rooms.add(new Room(roomDTO2, userList2, chatList1));
+    rooms.add(new Room(roomDTO3, userList3, chatList4));
+    rooms.add(new Room(roomDTO4, userList4, chatList1));
 
-        List<User> userList1 = new ArrayList<>();
-        List<User> userList2 = new ArrayList<>();
-        List<User> userList3 = new ArrayList<>();
-        List<User> userList4 = new ArrayList<>();
-
-        List<Chat> chatList1 = new ArrayList<>();
-        List<Chat> chatList2 = new ArrayList<>();
-        List<Chat> chatList3 = new ArrayList<>();
-        List<Chat> chatList4 = new ArrayList<>();
-
-        chatList2.add(new Chat(chatDTO1, "와구와구프린세스", dates[0]));
-        chatList3.add(new Chat(chatDTO2, "와구와구프린세스", dates[1]));
-        chatList4.add(new Chat(chatDTO1, "와구와구프린세스", dates[0]));
-        chatList4.add(new Chat(chatDTO2, "와구와구프린세스", dates[1]));
-
-        userList1.add(new User(userDTO1, chatList1));
-        userList2.add(new User(userDTO2, chatList1));
-        userList3.add(new User(userDTO3, chatList1));
-        userList3.add(new User(erpin, chatList2));
-        userList3.add(new User(komi, chatList3));
-        userList4.add(new User(userDTO4, chatList1));
-
-        List<Room> rooms = new ArrayList<>();
-
-        rooms.add(new Room(roomDTO1, userList1, chatList1));
-        rooms.add(new Room(roomDTO2, userList2, chatList1));
-        rooms.add(new Room(roomDTO3, userList3, chatList4));
-        rooms.add(new Room(roomDTO4, userList4, chatList1));
-
-        return Stream.of(
-            arguments(rooms)
-        );
-    }
+    return Stream.of(
+        arguments(rooms)
+    );
+  }
 }

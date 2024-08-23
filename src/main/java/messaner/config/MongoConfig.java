@@ -14,31 +14,32 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
 @EnableTransactionManagement
-public class MongoConfig extends AbstractMongoClientConfiguration{
-    @Value("${spring.data.mongodb.dbname}")
-    private String dbName;
-    @Value("${spring.data.mongodb.uri}")
-    private String uri;
+public class MongoConfig extends AbstractMongoClientConfiguration {
 
-    @Override
-    public String getDatabaseName(){
-        return dbName;
-    }
+  @Value("${spring.data.mongodb.dbname}")
+  private String dbName;
+  @Value("${spring.data.mongodb.uri}")
+  private String uri;
 
-    @Override
-    public MongoClient mongoClient() {
-        return MongoClients.create(uri);
-    }
+  @Override
+  public String getDatabaseName() {
+    return dbName;
+  }
 
-    @Bean
-    public MongoTemplate MongoTemplate() throws Exception {
-        MongoTemplate template = new MongoTemplate(mongoClient(), getDatabaseName());
-        template.setSessionSynchronization(SessionSynchronization.ALWAYS);
-        return template;
-    }
+  @Override
+  public MongoClient mongoClient() {
+    return MongoClients.create(uri);
+  }
 
-    @Bean
-    public MongoTransactionManager transactionManager(MongoDatabaseFactory mongoDatabaseFactory) {
-        return new MongoTransactionManager(mongoDatabaseFactory);
-    }
+  @Bean
+  public MongoTemplate MongoTemplate() throws Exception {
+    MongoTemplate template = new MongoTemplate(mongoClient(), getDatabaseName());
+    template.setSessionSynchronization(SessionSynchronization.ALWAYS);
+    return template;
+  }
+
+  @Bean
+  public MongoTransactionManager transactionManager(MongoDatabaseFactory mongoDatabaseFactory) {
+    return new MongoTransactionManager(mongoDatabaseFactory);
+  }
 }

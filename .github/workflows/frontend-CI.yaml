@@ -2,7 +2,7 @@ name: Frontend CI
 
 on:
   pull_request:
-    paths: 
+    paths:
       - 'src/main/resources/react-dev/**'
   push:
     paths:
@@ -11,19 +11,19 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
-  
+
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Set NodeJS
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
+      - name: Set NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-    - name: Install dependencies
-      run: cd src/main/resources/react-dev && npm install
+      - name: Install dependencies
+        run: cd src/main/resources/react-dev && npm install
 
-    - name: Run ESLint
-      run: npm run lint
+      - name: Run ESLint
+        run: npm run lint
 

@@ -1,6 +1,6 @@
 name: CD workflow
 
-on: 
+on:
   merge_group:
     branches:
       - main
@@ -16,41 +16,39 @@ jobs:
       EC2_HOST: ${{ secrets.EC2_HOST }}
       EC2_USER: ${{ secrets.EC2_USER }}
 
-    steps: 
-    - name: Checkout
-      uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Set JDK
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'oracle'
-        java-version: 21
-        architecture: x64
+      - name: Set JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'oracle'
+          java-version: 21
+          architecture: x64
 
-    - name: Set NodeJS
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
+      - name: Set NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
-      with:
-        arguments: build
+      - name: Setup Gradle
+        run: ./gradlew build --stacktrace
 
-    - name: Setup React
-      run: |
-        cd src/main/resources/react-dev
-        npm audit fix && npm install
-        npm run build && cd ../../../../
+      - name: Setup React
+        run: |
+          cd src/main/resources/react-dev
+          npm audit fix && npm install
+          npm run build && cd ../../../../
 
-    - name: Copy JAR to EC2
-      run: |
-        echo "$SSH_PRIVATE_KEY" > private_key.pem
-        chmod 600 private_key.pem
-        scp -i private_key.pem /build/libs/messaner-0.0.1-SNAPSHOT.jar $EC2_USER@$EC2_HOST:/home/ec2-user/messaner/build/libs
+      - name: Copy JAR to EC2
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          scp -i private_key.pem /build/libs/messaner-0.0.1-SNAPSHOT.jar $EC2_USER@$EC2_HOST:/home/ec2-user/messaner/build/libs
 
-    - name: Deploy on EC2 via SSH
-      run: |
-        ssh -i private_key.pem $EC2_USER@$EC2_HOST << 'EOF'
-        pkill -f 'java -jar' || true
-        nohup java -jar /home/ec2-user/messaner/build/libs/messaner-0.0.1-SNAPSHOT.jar > /home/ec2-user/messaner/logs 2>&1 & EOF
+      - name: Deploy on EC2 via SSH
+        run: |
+          ssh -i private_key.pem $EC2_USER@$EC2_HOST << 'EOF'
+          pkill -f 'java -jar' || true
+          nohup java -jar /home/ec2-user/messaner/build/libs/messaner-0.0.1-SNAPSHOT.jar > /home/ec2-user/messaner/logs 2>&1 & EOF
