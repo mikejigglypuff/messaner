@@ -37,6 +37,12 @@ jobs:
       with:
         arguments: build
 
+    - name: Setup React
+      run: |
+        cd src/main/resources/react-dev
+        npm audit fix && npm install
+        npm run build && cd ../../../../
+
     - name: Copy JAR to EC2
       run: |
         echo "$SSH_PRIVATE_KEY" > private_key.pem
