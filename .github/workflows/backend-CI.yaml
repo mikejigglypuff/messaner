@@ -30,11 +30,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Setup Gradle
-        run: ./gradlew build --stacktrace
-
-      - name: Run test
-        run: ./gradlew :test
-
-      - name: Run checkstyle
-        run: ./gradlew checkstyleMain
-
+        env:
+          MONGO_URI: ${{ secrets.MONGODB_URI }},
+          MONGO_DBNAME: ${{ secrets.MONGODB_DBNAME }}
+        run: ./gradlew build --warning-mode=all --stacktrace

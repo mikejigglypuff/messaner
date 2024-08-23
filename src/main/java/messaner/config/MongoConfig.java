@@ -21,13 +21,24 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
   @Value("${spring.data.mongodb.uri}")
   private String uri;
 
+  private final String envDBName;
+  private final String envURI;
+
+  MongoConfig() {
+    envURI = System.getenv("MONGO_URI");
+    envDBName = System.getenv("MONGO_DBNAME");
+  }
+
   @Override
   public String getDatabaseName() {
-    return dbName;
+    return (dbName != null) ? dbName : envDBName;
   }
 
   @Override
   public MongoClient mongoClient() {
+    if (uri == null) {
+      return MongoClients.create(envURI);
+    }
     return MongoClients.create(uri);
   }
 
