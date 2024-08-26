@@ -65,13 +65,11 @@ sourceSets {
 
 tasks.named('test') {
     doFirst {
-        def mongoUri = System.getenv("MONGO_URI")
-        def mongoDBName = System.getenv("MONGO_DBNAME")
         environment 'SPRING_PROFILES_ACTIVE', 'test'
     }
 
-    systemProperty "mongo.uri", mongoUri
-    systemProperty "mongo.dbname", mongoDBName
+    systemProperty "mongo.uri", System.getenv("MONGO_URI")
+    systemProperty "mongo.dbname", System.getenv("MONGO_DBNAME")
     useJUnitPlatform()
 }
 
