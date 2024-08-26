@@ -39,7 +39,9 @@ jobs:
         env:
           MONGO_URI: ${{ secrets.MONGODB_URI }},
           MONGO_DBNAME: ${{ secrets.MONGODB_DBNAME }}
-        run: ./gradlew build --warning-mode=all --stacktrace
+        run: |
+          ./gradlew build --warning-mode=all --stacktrace 
+          cat $(find build/test-results/test -name "*.xml")
 
       - name: Setup React
         run: |
