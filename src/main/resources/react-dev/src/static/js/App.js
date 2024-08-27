@@ -232,60 +232,64 @@ function App() {
     }, [connected]);
 
     return (client.current && client.current.connected) ?
-        <div class="bg-gray-100 p-4">
+        <div className="bg-gray-100 p-4">
         {/* 채팅방 UI */}
-            <div class="max-w-2xl mx-auto bg-white shadow-lg rounded-lg">
-                <div class="flex items-center p-4 border-b">
-                    <button class="p-2 rounded-full hover:bg-gray-200" onClick={() => disconnect(roomName)}>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-lg">
+                <div className="flex items-center p-4 border-b">
+                    <button className="p-2 rounded-full hover:bg-gray-200" onClick={() => disconnect(roomName)}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
-                    <h1 class="flex-grow text-center text-xl font-bold">{roomName}</h1>
+                    <h1 className="flex-grow text-center text-xl font-bold">{roomName}</h1>
                 </div>
                 {   
                     Object.values(chatting).map(chat => (
-                        <div class="p-4">
-                            <div class="text-center text-gray-500 mb-4">YYYY-MM-dd</div>
-                            <div class="space-y-4">
-                                <div class="flex items-center">
-                                    <div class="font-bold">{chat.writer}</div>
-                                    <div class="flex-grow mx-2 p-2 bg-gray-200 rounded">{chat.message}</div>
-                                    <div class="text-gray-500">{chat.createdAt}</div>
+                        <div className="p-4" key={`chat_{$chat.writer}_${chat.createdAt}`}>
+                            <div className="text-center text-gray-500 mb-4">YYYY-MM-dd</div>
+                            <div className="space-y-4">
+                                <div className="flex items-center">
+                                    <div className="font-bold">{chat.writer}</div>
+                                    <div className="flex-grow mx-2 p-2 bg-gray-200 rounded">{chat.message}</div>
+                                    <div className="text-gray-500">{chat.createdAt}</div>
                                 </div>
                             </div>
                         </div>
                 )) }
-                <div class="mt-4 flex items-center">
+                <div className="mt-4 flex items-center">
                     <input
                         type="text"
                         placeholder="메시지를 입력하세요..."
-                        class="flex-grow p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-grow p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         onChange={typeMessage}
                     />
-                    <button class="ml-2 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600" onClick={sendChat}>전송</button>
+                    <button className="ml-2 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600" onClick={sendChat}>전송</button>
                 </div>
             </div>
         </div> :
-        <div class="bg-gray-100 flex items-center justify-center min-h-screen">
+        <div className="bg-gray-100 flex items-center justify-center min-h-screen">
             {/* 메인 페이지 UI */}
-            <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl">
-                <h1 class="text-3xl font-bold text-center mb-6">Title</h1>
-                <div class="flex items-center justify-center mb-6">
-                    <input type="text" placeholder="채널명을 입력하세요" class="border border-gray-300 rounded-lg p-2 w-full max-w-md" onChange={typeRoomName} />
+            <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl">
+                <h1 className="text-3xl font-bold text-center mb-6">Title</h1>
+                <div className="flex items-center justify-center mb-6">
+                    <input type="text" placeholder="채널명을 입력하세요" className="border border-gray-300 rounded-lg p-2 w-full max-w-md" onChange={typeRoomName} />
                 </div>
-                <div class="flex items-center justify-center space-x-4 mb-6">
-                    <button class="bg-green-500 text-white px-4 py-2 rounded-lg" onClick={getRooms}>Search</button>
-                    <button class="bg-green-500 text-white px-4 py-2 rounded-lg" onClick={createChannel}>채팅방 생성</button>
+                <div className="flex items-center justify-center space-x-4 mb-6">
+                    <button className="bg-green-500 text-white px-4 py-2 rounded-lg" onClick={getRooms}>Search</button>
+                    <button className="bg-green-500 text-white px-4 py-2 rounded-lg" onClick={createChannel}>채팅방 생성</button>
                 </div>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {
                         Object.values(roomList).map(val => (
-                        <div class="bg-green-100 border border-green-500 rounded-lg p-4 flex justify-between items-center" onClick={() => connect(val.name)}>
+                        <div
+                          className="bg-green-100 border border-green-500 rounded-lg p-4 flex justify-between items-center"
+                          onClick={() => connect(val.name)}
+                          key={`room_${val.name}`}
+                        >
                             <span>{val.name}</span>
-                            <div class="flex items-center space-x-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 2a6 6 0 00-6 6v4a6 6 0 0012 0V8a6 6 0 00-6-6zM8 8a2 2 0 114 0 2 2 0 01-4 0zm-2 6a4 4 0 018 0H6z" clip-rule="evenodd" />
+                            <div className="flex items-center space-x-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 2a6 6 0 00-6 6v4a6 6 0 0012 0V8a6 6 0 00-6-6zM8 8a2 2 0 114 0 2 2 0 01-4 0zm-2 6a4 4 0 018 0H6z" clipRule="evenodd" />
                                 </svg>
                                 <span>{val.subscribers.length}</span>
                             </div>
