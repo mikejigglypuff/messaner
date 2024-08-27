@@ -41,7 +41,12 @@ jobs:
           MONGO_DBNAME: ${{ secrets.MONGODB_DBNAME }}
         run: |
           ./gradlew build --warning-mode=all --stacktrace 
-          cat file:///home/runner/work/messaner/messaner/build/reports/***s/***/index.html
+          File='file:///home/runner/work/messaner/messaner/build/reports/***s/***/index.html'
+          if [ -f "$FILE" ]; then
+            cat "$FILE"
+          else
+            echo '$FILE does not exist.'
+          fi
 
       - name: Setup React
         run: |
