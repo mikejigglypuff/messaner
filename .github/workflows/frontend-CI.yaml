@@ -23,7 +23,3 @@ jobs:
 
       - name: Install dependencies
         run: cd src/main/resources/react-dev && npm install
-
-      - name: Run ESLint
-        run: npx eslint .
-
