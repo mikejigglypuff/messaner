@@ -231,6 +231,7 @@ function App() {
             subscribeRoom(client.current, roomName);
             getChat(roomName);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [connected]);
 
     return (client.current && client.current.connected) ?

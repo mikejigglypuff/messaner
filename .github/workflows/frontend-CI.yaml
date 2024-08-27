@@ -22,4 +22,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: cd src/main/resources/react-dev && npm install
+        run: |
+          cd src/main/resources/react-dev
+          npm audit fix && npm install && npm run build
+          npx eslint .
