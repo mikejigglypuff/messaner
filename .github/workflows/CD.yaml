@@ -41,7 +41,7 @@ jobs:
           MONGO_DBNAME: ${{ secrets.MONGODB_DBNAME }}
         run: |
           ./gradlew build --warning-mode=all --stacktrace 
-          cat $(find build/test-results/test -name "*.xml")
+          cat file:///home/runner/work/messaner/messaner/build/reports/***s/***/index.html
 
       - name: Setup React
         run: |

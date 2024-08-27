@@ -31,15 +31,15 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
 
   @Override
   public String getDatabaseName() {
-    return (dbName != null) ? dbName : envDBName;
+    return (envDBName != null) ? envDBName : dbName;
   }
 
   @Override
   public MongoClient mongoClient() {
     if (uri == null) {
-      return MongoClients.create(envURI);
+      return MongoClients.create(uri);
     }
-    return MongoClients.create(uri);
+    return MongoClients.create(envURI);
   }
 
   @Bean

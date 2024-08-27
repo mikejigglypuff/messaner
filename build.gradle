@@ -68,9 +68,11 @@ tasks.named('test') {
         environment 'SPRING_PROFILES_ACTIVE', 'test'
     }
 
-    systemProperty "mongo.uri", System.getenv("MONGO_URI")
-    systemProperty "mongo.dbname", System.getenv("MONGO_DBNAME")
-    useJUnitPlatform()
+    doLast {
+        systemProperty "mongo.uri", System.getenv("MONGO_URI")
+        systemProperty "mongo.dbname", System.getenv("MONGO_DBNAME")
+        useJUnitPlatform()
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
