@@ -54,15 +54,22 @@ jobs:
           npm audit fix && npm install
           npm run build && cd ../../../../
 
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: SSH_PRIVATE_KEY
+
       - name: Copy JAR to EC2
-        run: |
-          echo "$SSH_PRIVATE_KEY" > private_key.pem
-          chmod 775 private_key.pem
-          ssh -i private_key.pem $EC2_USER@$EC2_HOST
-          scp -i private_key.pem /build/libs/messaner-0.0.1-SNAPSHOT.jar $EC2_USER@$EC2_HOST:/home/ec2-user/messaner/build/libs
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ env.EC2_HOST }},
+          username: ${{ env.EC2_USER }},
+          key: ${{ env.SSH_PRIVATE_KEY }},
+          source: '.',
+          target: 'home/${{ env.EC2_USER }}'
 
       - name: Deploy on EC2 via SSH
         run: |
-          ssh -i private_key.pem $EC2_USER@$EC2_HOST << 'EOF'
+          ssh -i private_key.pem ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << 'EOF'
           pkill -f 'java -jar' || true
-          nohup java -jar /home/ec2-user/messaner/build/libs/messaner-0.0.1-SNAPSHOT.jar > /home/ec2-user/messaner/logs 2>&1 & EOF
+          nohup java -jar /home/${{ env.EC2_USER }}/messaner/build/libs/messaner-0.0.1-SNAPSHOT.jar > /home/ec2-user/messaner/logs 2>&1 & EOF
