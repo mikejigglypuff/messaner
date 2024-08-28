@@ -54,11 +54,6 @@ jobs:
           npm audit fix && npm install
           npm run build && cd ../../../../
 
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.7.0
-        with:
-          ssh-private-key: ${{ env.SSH_PRIVATE_KEY }}
-
       - name: Copy JAR to EC2
         run: |
           echo "${{ env.SSH_PRIVATE_KEY }}" > private_key.pem
