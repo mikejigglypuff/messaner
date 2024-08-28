@@ -62,8 +62,8 @@ jobs:
           username: ${{ env.EC2_USER }}
           key: ${{ env.SSH_PRIVATE_KEY }}
           port: 22
-          source: "${{ BUILD_DIR }}messaner-0.0.1-SNAPSHOT.jar"
-          target: "/home/${{ env.EC2_USER }}/${{ BUILD_DIR }}"
+          source: "${{ env.BUILD_DIR }}messaner-0.0.1-SNAPSHOT.jar"
+          target: "/home/${{ env.EC2_USER }}/${{ env.BUILD_DIR }}"
 
       - name: Deploy on EC2 via SSH
         uses: appleboy/ssh-action@master
@@ -75,4 +75,4 @@ jobs:
           script: |
             ssh -i private_key.pem ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << 'EOF'
             pkill -f 'java -jar' || true
-            nohup java -jar /home/${{ env.EC2_USER }}/${{ BUILD_DIR }}messaner-0.0.1-SNAPSHOT.jar > /home/ec2-user/messaner/logs 2>&1 & EOF
+            nohup java -jar /home/${{ env.EC2_USER }}/${{ env.BUILD_DIR }}messaner-0.0.1-SNAPSHOT.jar > /home/ec2-user/messaner/logs 2>&1 & EOF
