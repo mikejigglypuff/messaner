@@ -60,13 +60,11 @@ jobs:
           ssh-private-key: SSH_PRIVATE_KEY
 
       - name: Copy JAR to EC2
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ env.EC2_HOST }},
-          username: ${{ env.EC2_USER }},
-          key: ${{ env.SSH_PRIVATE_KEY }},
-          source: '.',
-          target: 'home/${{ env.EC2_USER }}'
+        run: |
+          echo "${{ env.SSH_PRIVATE_KEY }}" > private_key.pem
+          chmod 775 private_key.pem
+          ssh -i private_key.pem ${{ env.EC2_USER }}@${{ env.EC2_HOST }}
+          scp -i private_key.pem /build/libs/messaner-0.0.1-SNAPSHOT.jar ${{ env.EC2_USER }}@${{ env.EC2_HOST }}:/home/${{ env.EC2_USER }}
 
       - name: Deploy on EC2 via SSH
         run: |
