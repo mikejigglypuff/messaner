@@ -18,6 +18,9 @@ jobs:
       BUILD_DIR: "messaner/build/libs/"
 
     steps:
+      - name: Enable debug mode
+        run: echo "ACTIONS_RUNNER_DEBUG=true" >> $GITHUB_ENV
+
       - name: Checkout
         uses: actions/checkout@v4
 
