@@ -65,7 +65,7 @@ jobs:
           username: ${{ env.EC2_USER }}
           key: ${{ env.SSH_PRIVATE_KEY }}
           port: 22
-          source: "$./{{ env.BUILD_DIR }}messaner-0.0.1-SNAPSHOT.jar"
+          source: "./${{ env.BUILD_DIR }}messaner-0.0.1-SNAPSHOT.jar"
           target: "~/${{ env.BUILD_DIR }}"
 
       - name: Deploy on EC2 via SSH
