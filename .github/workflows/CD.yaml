@@ -59,7 +59,7 @@ jobs:
           host: ${{ env.EC2_HOST }}
           username: ${{ env.EC2_USER }}
           key: ${{ env.SSH_PRIVATE_KEY }}
-          port: 22,
+          port: 22
           source: "/build/libs/messaner-0.0.1-SNAPSHOT.jar"
           target: "/home/${{ env.EC2_USER }}"
 
@@ -69,7 +69,7 @@ jobs:
           host: ${{ env.EC2_HOST }}
           username: ${{ env.EC2_USER }}
           key: ${{ env.SSH_PRIVATE_KEY }}
-          port: 22,
+          port: 22
           script: |
             ssh -i private_key.pem ${{ env.EC2_USER }}@${{ env.EC2_HOST }} << 'EOF'
             pkill -f 'java -jar' || true
