@@ -84,4 +84,4 @@ jobs:
           port: 22
           script: |
             export SPRING_PROFILES_ACTIVE=dev
-            sudo nohup java -jar ${{ env.BUILD_FILE }} > ~/messaner/logs 2>&1 & EOF
+            sudo nohup java -jar ${{ env.BUILD_FILE }} 1> ~/messaner/logs 2>&1
