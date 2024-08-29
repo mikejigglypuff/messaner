@@ -12,6 +12,7 @@ jobs:
   cd:
     runs-on: ubuntu-latest
     env:
+      BUILD_FILE: ${{ ~/messaner/build/libs/messaner-0.0.1-SNAPSHOT.jar }}
       EC2_HOST: ${{ secrets.EC2_HOST }}
       EC2_USER: ${{ secrets.EC2_USER }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -83,5 +84,11 @@ jobs:
           port: 22
           script: |
             export SPRING_PROFILES_ACTIVE=dev
-            sudo pkill -f 'java -jar' || true
-            sudo nohup java -jar ~/messaner/build/libs/messaner-0.0.1-SNAPSHOT.jar > ~/messaner/logs 2>&1 & EOF
+            
+            if pgrep -f "java -jar ${{ env.BUILD_FILE }}"; then
+              echo "Stopping existing Java process..."
+              pkill -f "java -jar ${{ env.BUILD_FILE }}"
+              sleep 5
+            fi
+            
+            sudo nohup java -jar ${{ env.BUILD_FILE }} > ~/messaner/logs 2>&1 & EOF
