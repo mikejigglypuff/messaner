@@ -22,6 +22,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Add Setting files
         run: |
           echo '${{ secrets.DEV_PROPERTIES }} > ./src/main/resources/application-dev.properties'
           echo '${{ secrets.TEST_PROPERTIES }} > ./src/main/resources/application-test.properties'
@@ -58,10 +60,10 @@ jobs:
             echo '$FILE does not exist.'
           fi
 
-      - name: Check files before transfer
+      - name: Check Files Before Transfer
         run: ls ./build/libs
 
-      - name: Copy JAR to EC2
+      - name: Copy JAR To EC2
         uses: appleboy/scp-action@master
         with:
           host: ${{ env.EC2_HOST }}
@@ -72,7 +74,7 @@ jobs:
           target: "~/messaner"
           overwrite: true
 
-      - name: Deploy on EC2 via SSH
+      - name: Deploy On EC2 Via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ env.EC2_HOST }}
