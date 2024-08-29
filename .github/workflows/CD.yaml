@@ -84,11 +84,4 @@ jobs:
           port: 22
           script: |
             export SPRING_PROFILES_ACTIVE=dev
-            
-            if pgrep -f "java -jar ${{ env.BUILD_FILE }}"; then
-              echo "Stopping existing Java process..."
-              pkill -f "java -jar ${{ env.BUILD_FILE }}"
-              sleep 5
-            fi
-            
             sudo nohup java -jar ${{ env.BUILD_FILE }} > ~/messaner/logs 2>&1 & EOF
