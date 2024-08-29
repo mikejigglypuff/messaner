@@ -22,6 +22,9 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+        run: |
+          echo '${{ secrets.DEV_PROPERTIES }} > ./src/main/resources/application-dev.properties'
+          echo '${{ secrets.TEST_PROPERTIES }} > ./src/main/resources/application-test.properties'
 
       - name: Set JDK
         uses: actions/setup-java@v4
@@ -41,14 +44,12 @@ jobs:
           npm audit fix && npm install
           npm run build && cd ../../../../
 
-      - name: Change file permissions
-        run: chmod +x ./gradlew
-
       - name: Setup Gradle
         env:
           MONGO_URI: ${{ secrets.MONGODB_URI }},
           MONGO_DBNAME: ${{ secrets.MONGODB_DBNAME }}
         run: |
+          chmod +x ./gradlew
           ./gradlew build --warning-mode=all --stacktrace 
           File='file:///home/runner/work/messaner/messaner/build/reports/***s/***/index.html'
           if [ -f "$FILE" ]; then
@@ -79,5 +80,6 @@ jobs:
           key: ${{ env.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            pkill -f 'java -jar' || true
-            nohup java -jar ~/messaner/build/libs/messaner-0.0.1-SNAPSHOT.jar > ~/messaner/logs 2>&1 & EOF
+            export SPRING_PROFILES_ACTIVE=dev
+            sudo pkill -f 'java -jar' || true
+            sudo nohup java -jar ~/messaner/build/libs/messaner-0.0.1-SNAPSHOT.jar > ~/messaner/logs 2>&1 & EOF
