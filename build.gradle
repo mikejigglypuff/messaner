@@ -76,6 +76,10 @@ tasks.named('test') {
 }
 
 tasks.withType(JavaCompile).configureEach {
+    doFirst {
+        println "Project Directory before Java Compile: $projectDir"
+    }
+    
     options.compilerArgs << "-parameters"
 }
 
