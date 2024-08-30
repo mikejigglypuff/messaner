@@ -86,37 +86,35 @@ tasks.withType(Checkstyle).configureEach {
     }
 }
 
-/*
+
 tasks.register('installReact', Exec) {
-	workingDir "$frontendDir"
-	inputs.dir "$frontendDir"
-	group = BasePlugin.BUILD_GROUP
-	if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
-		commandLine "cmd", "/c", "npm audit fix && npm install"
-	} else {
-		commandLine "sh", "-c", "npm audit fix && npm install"
-	}
+    workingDir "$frontendDir"
+    inputs.dir "$frontendDir"
+    group = BasePlugin.BUILD_GROUP
+    if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
+        commandLine "cmd", "/c", "npm audit fix && npm install"
+    } else {
+        commandLine "sh", "-c", "npm audit fix && npm install"
+    }
 }
 
 tasks.register('buildReact', Exec) {
-	dependsOn "installReact"
-	workingDir "$frontendDir"
-	inputs.dir "$frontendDir"
-	group = BasePlugin.BUILD_GROUP
-	if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
-		commandLine "cmd", "/c", "npm run build"
-	} else {
-		commandLine "sh", "-c", "npm run build"
-	}
+    dependsOn "installReact"
+    workingDir "$frontendDir"
+    inputs.dir "$frontendDir"
+    group = BasePlugin.BUILD_GROUP
+    if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
+        commandLine "cmd", "/c", "npm run build"
+    } else {
+        commandLine "sh", "-c", "npm run build"
+    }
 }
 
 tasks.register('copyReactBuildFiles', Copy) {
-	dependsOn "buildReact"
-	from "$frontendDir/build"
-	into "$projectDir/src/main/resources/static"
+    dependsOn "buildReact"
+    from "$frontendDir/build"
+    into "$projectDir/src/main/resources/static"
 }
-
- */
 
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs << '-parameters'
