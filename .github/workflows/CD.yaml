@@ -83,7 +83,9 @@ jobs:
           key: ${{ env.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            export SPRING_PROFILES_ACTIVE=dev
             export MONGO_URI=${{ secrets.MONGODB_URI }}
             export MONGO_DBNAME=${{ secrets.MONGODB_DBNAME }}
-            sudo nohup java -jar ${{ env.BUILD_FILE }} 1> ~/messaner/logs 2>&1
+            sudo nohup java -jar \
+              -Dspring.config.location=classpath:/application-dev.properties, classpath:/application-test.properties, /home/${{ env.EC2_USER }}/messaner/src/main/resources/application-dev.properties, /home/${{ env.EC2_USER }}/messaner/src/main/resources/application-test.properties
+              -Dspring.profiles.active=dev \
+              ${{ env.BUILD_FILE }} 1> ~/messaner/logs 2>&1
