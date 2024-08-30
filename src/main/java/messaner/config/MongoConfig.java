@@ -25,8 +25,8 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
   private final String envURI;
 
   MongoConfig() {
-    envURI = System.getenv("mongo.uri");
-    envDBName = System.getenv("mongo.dbname");
+    envURI = System.getenv("MONGO_URI");
+    envDBName = System.getenv("MONGO_DBNAME");
   }
 
   @Override
@@ -36,7 +36,7 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
 
   @Override
   public MongoClient mongoClient() {
-    if (uri == null) {
+    if (uri != null) {
       return MongoClients.create(uri);
     }
     return MongoClients.create(envURI);

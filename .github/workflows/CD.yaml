@@ -84,4 +84,6 @@ jobs:
           port: 22
           script: |
             export SPRING_PROFILES_ACTIVE=dev
+            export MONGO_URI=${{ secrets.MONGODB_URI }}
+            export MONGO_DBNAME=${{ secrets.MONGODB_DBNAME }}
             sudo nohup java -jar ${{ env.BUILD_FILE }} 1> ~/messaner/logs 2>&1
