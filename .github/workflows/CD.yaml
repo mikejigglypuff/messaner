@@ -26,8 +26,8 @@ jobs:
 
       - name: Add Setting files
         run: |
-          echo '${{ secrets.DEV_PROPERTIES }} > ./src/main/resources/application-dev.properties'
-          echo '${{ secrets.TEST_PROPERTIES }} > ./src/main/resources/application-test.properties'
+          echo '${{ secrets.DEV_PROPERTIES }} > ${{ github.workspace }}/src/main/resources/application-dev.properties'
+          echo '${{ secrets.TEST_PROPERTIES }} > ${{ github.workspace }}/application-test.properties'
 
       - name: Set JDK
         uses: actions/setup-java@v4
