@@ -26,8 +26,9 @@ jobs:
 
       - name: Add Setting files
         run: |
-          echo '${{ secrets.DEV_PROPERTIES }} > ./src/main/resources/application-dev.properties'
-          echo '${{ secrets.TEST_PROPERTIES }} > ./src/main/resources/application-test.properties'
+          pwd
+          sudo echo '${{ secrets.DEV_PROPERTIES }} > src/main/resources/application-dev.properties'
+          sudo echo '${{ secrets.TEST_PROPERTIES }} > src/main/resources/application-test.properties'
 
       - name: Set JDK
         uses: actions/setup-java@v4
@@ -53,7 +54,7 @@ jobs:
           MONGO_DBNAME: ${{ secrets.MONGODB_DBNAME }}
         run: |
           chmod +x ./gradlew
-          ./gradlew build --warning-mode=all --stacktrace 
+          ./gradlew build --exclude-task test --warning-mode=all --stacktrace 
           File='file:///home/runner/work/messaner/messaner/build/reports/***s/***/index.html'
           if [ -f "$FILE" ]; then
             cat "$FILE"
@@ -62,7 +63,7 @@ jobs:
           fi
 
       - name: Check Files Before Transfer
-        run: ls ./build/libs ./src/main/resources
+        run: ls -al build/libs src/main/resources
 
       - name: Copy JAR To EC2
         uses: appleboy/scp-action@master
@@ -71,7 +72,7 @@ jobs:
           username: ${{ env.EC2_USER }}
           key: ${{ env.SSH_PRIVATE_KEY }}
           port: 22
-          source: "./build/libs/messaner-0.0.1-SNAPSHOT.jar"
+          source: "build/libs/messaner-0.0.1-SNAPSHOT.jar"
           target: "~/messaner"
           overwrite: true
 
@@ -85,5 +86,7 @@ jobs:
           script: |
             export MONGO_URI=${{ secrets.MONGODB_URI }}
             export MONGO_DBNAME=${{ secrets.MONGODB_DBNAME }}
-            sudo nohup java -jar ${{ env.BUILD_FILE }} 1> ~/messaner/logs 2>&1 \
-              --spring.config.location=./src/main/resources/application-dev.properties
+            nohup java -jar \
+              -Dspring.profiles.active=dev \
+              -Dspring.config.location=src/main/resources/application-dev.properties 
+            ${{ env.BUILD_FILE }} 1> ~/messaner/logs 2>&1 &

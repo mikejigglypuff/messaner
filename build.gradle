@@ -51,7 +51,7 @@ dependencies {
     testImplementation 'org.projectlombok:lombok'
 }
 
-def frontendDir = "./src/main/resources/react-dev"
+def frontendDir = "src/main/resources/react-dev"
 
 sourceSets {
     main {
