@@ -61,9 +61,11 @@ jobs:
           else
             echo '$FILE does not exist.'
           fi
+          chmod 755 ${{ env.BUILD_FILE }}
 
       - name: Check Files Before Transfer
-        run: ls -al build/libs src/main/resources
+        run: |
+          ls -al build/libs src/main/resources
 
       - name: Copy JAR To EC2
         uses: appleboy/scp-action@master
