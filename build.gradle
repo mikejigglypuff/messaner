@@ -51,12 +51,12 @@ dependencies {
     testImplementation 'org.projectlombok:lombok'
 }
 
-def frontendDir = "$projectDir/src/main/resources/react-dev"
+def frontendDir = "./src/main/resources/react-dev"
 
 sourceSets {
     main {
         resources {
-            srcDirs = ["$projectDir/src/main/resources"]
+            srcDirs = ["src/main/resources"]
         }
     }
 }
@@ -76,10 +76,6 @@ tasks.named('test') {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    doFirst {
-        println "Project Directory before Java Compile: $projectDir"
-    }
-    
     options.compilerArgs << "-parameters"
 }
 
@@ -117,7 +113,7 @@ tasks.register('buildReact', Exec) {
 tasks.register('copyReactBuildFiles', Copy) {
     dependsOn "buildReact"
     from "$frontendDir/build"
-    into "$projectDir/src/main/resources/static"
+    into "./src/main/resources/static"
 }
 
 tasks.withType(JavaCompile).configureEach {

@@ -26,8 +26,8 @@ jobs:
 
       - name: Add Setting files
         run: |
-          echo '${{ secrets.DEV_PROPERTIES }} > ${{ github.workspace }}/src/main/resources/application-dev.properties'
-          echo '${{ secrets.TEST_PROPERTIES }} > ${{ github.workspace }}/application-test.properties'
+          echo '${{ secrets.DEV_PROPERTIES }} > ./src/main/resources/application-dev.properties'
+          echo '${{ secrets.TEST_PROPERTIES }} > ./src/main/resources/application-test.properties'
 
       - name: Set JDK
         uses: actions/setup-java@v4
@@ -62,9 +62,7 @@ jobs:
           fi
 
       - name: Check Files Before Transfer
-        run: |
-          ls ./build/libs
-          ls ./src/main/resources
+        run: ls ./build/libs ./src/main/resources
 
       - name: Copy JAR To EC2
         uses: appleboy/scp-action@master
@@ -87,7 +85,5 @@ jobs:
           script: |
             export MONGO_URI=${{ secrets.MONGODB_URI }}
             export MONGO_DBNAME=${{ secrets.MONGODB_DBNAME }}
-            sudo nohup java -jar \
-              -Dspring.config.location=classpath:/application-dev.properties, classpath:/application-test.properties \
-              -Dspring.profiles.active=dev \
-              ${{ env.BUILD_FILE }} 1> ~/messaner/logs 2>&1
+            sudo nohup java -jar ${{ env.BUILD_FILE }} 1> ~/messaner/logs 2>&1 \
+              --spring.config.location=./src/main/resources/application-dev.properties
