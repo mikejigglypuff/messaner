@@ -86,7 +86,7 @@ jobs:
           script: |
             export MONGO_URI=${{ secrets.MONGODB_URI }}
             export MONGO_DBNAME=${{ secrets.MONGODB_DBNAME }}
-            nohup java -jar \
+            nohup sudo java -jar \
               -Dspring.profiles.active=dev \
               -Dspring.config.location=src/main/resources/application-dev.properties 
             ${{ env.BUILD_FILE }} 1> ~/messaner/logs 2>&1 &
