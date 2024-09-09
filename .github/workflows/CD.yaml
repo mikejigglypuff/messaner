@@ -26,9 +26,10 @@ jobs:
 
       - name: Add Setting files
         run: |
-          pwd
-          sudo echo '${{ secrets.DEV_PROPERTIES }} > src/main/resources/application-dev.properties'
-          sudo echo '${{ secrets.TEST_PROPERTIES }} > src/main/resources/application-test.properties'
+          cd src/main/resources
+          sudo echo '${{ secrets.DEV_PROPERTIES }} > application-dev.properties'
+          sudo echo '${{ secrets.TEST_PROPERTIES }} > application-test.properties'
+          cd ../../../
 
       - name: Set JDK
         uses: actions/setup-java@v4
