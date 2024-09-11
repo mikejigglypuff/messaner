@@ -89,10 +89,10 @@ jobs:
           key: ${{ env.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            pid=$(pgrep -f "java.*-Dapp.name=messaner")
+            pid=$(pgrep -f ${{ env.BUILD_FILE }} | grep -v $$)
+            ps -fp $pid
             if [ ! -z "$pid" ]; then
               echo "Stopping existing Java process with PID $pid"
-              ps -fp $pid
               kill $pid
             else
               echo "No matching Java process found."
