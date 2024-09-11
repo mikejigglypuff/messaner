@@ -68,7 +68,7 @@ jobs:
 
       - name: Check Files Before Transfer
         run: |
-          ls -al build/libs src/main/resources
+          ls -al build/libs src/main/resources build/resources/main
 
       - name: Copy JAR To EC2
         uses: appleboy/scp-action@master
