@@ -12,7 +12,8 @@ jobs:
   cd:
     runs-on: ubuntu-latest
     env:
-      BUILD_FILE: 'build/libs/messaner-0.0.1-SNAPSHOT.jar'
+      BUILD_FILE: 'messaner-0.0.1-SNAPSHOT.jar'
+      BUILD_PATH: 'build/libs/${{ env.BUILD_FILE }}'
       EC2_HOST: ${{ secrets.EC2_HOST }}
       EC2_USER: ${{ secrets.EC2_USER }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -63,7 +64,7 @@ jobs:
           else
             echo '$FILE does not exist.'
           fi
-          chmod 755 ${{ env.BUILD_FILE }}
+          chmod 755 ${{ env.BUILD_PATH }}
 
       - name: Check Files Before Transfer
         run: |
@@ -76,9 +77,24 @@ jobs:
           username: ${{ env.EC2_USER }}
           key: ${{ env.SSH_PRIVATE_KEY }}
           port: 22
-          source: '${{ env.BUILD_FILE }}'
+          source: '${{ env.BUILD_PATH }}'
           target: '~/messaner'
           overwrite: true
+
+      - name: Stop App Process
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.EC2_HOST }}
+          username: ${{ env.EC2_USER }}
+          key: ${{ env.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            pid=$(pgrep -f ${{ env.BUILD_FILE }})
+            if [ ! -z "$pid" ]; then
+              echo "Stopping existing Java process with PID $pid"
+              kill -9 $pid
+            fi
+
 
       - name: Deploy On EC2 Via SSH
         uses: appleboy/ssh-action@master
@@ -93,4 +109,4 @@ jobs:
             nohup java -jar \
               -Dspring.profiles.active=dev \
               -Dspring.config.location=src/main/resources/application-dev.properties 
-            ~/messaner/${{ env.BUILD_FILE }} 1> ~/messaner/logs 2>&1 &
+            ~/messaner/${{ env.BUILD_PATH }} 1> ~/messaner/logs 2>&1 &
