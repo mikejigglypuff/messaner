@@ -89,12 +89,14 @@ jobs:
           key: ${{ env.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            pid=$(pgrep -f ${{ env.BUILD_FILE }})
+            pid=$(pgrep -f "java.*-Dapp.name=messaner")
             if [ ! -z "$pid" ]; then
               echo "Stopping existing Java process with PID $pid"
-              kill -9 $pid
+              ps -fp $pid
+              kill $pid
+            else
+              echo "No matching Java process found.
             fi
-
 
       - name: Deploy On EC2 Via SSH
         uses: appleboy/ssh-action@master
@@ -108,5 +110,6 @@ jobs:
             export MONGO_DBNAME=${{ secrets.MONGODB_DBNAME }}
             nohup java -jar \
               -Dspring.profiles.active=dev \
-              -Dspring.config.location=src/main/resources/application-dev.properties 
+              -Dspring.config.location=src/main/resources/application-dev.properties \
+              -Dapp.name=messaner \
             ~/messaner/${{ env.BUILD_PATH }} 1> ~/messaner/logs 2>&1 &
