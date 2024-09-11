@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Enable debug mode
-        run: echo "ACTIONS_RUNNER_DEBUG=true" >> $GITHUB_ENV
+        run: echo 'ACTIONS_RUNNER_DEBUG=true' >> $GITHUB_ENV
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,8 +27,8 @@ jobs:
       - name: Add Setting files
         run: |
           cd src/main/resources
-          sudo echo '${{ secrets.DEV_PROPERTIES }} > application-dev.properties'
-          sudo echo '${{ secrets.TEST_PROPERTIES }} > application-test.properties'
+          echo '${{ secrets.DEV_PROPERTIES }}' > application-dev.properties
+          sudo echo '${{ secrets.TEST_PROPERTIES }}' > application-test.properties
           ls -al
           cd ../../../
 
@@ -58,8 +58,8 @@ jobs:
           chmod +x ./gradlew
           ./gradlew build --exclude-task test --warning-mode=all --stacktrace 
           File='file:///home/runner/work/messaner/messaner/build/reports/***s/***/index.html'
-          if [ -f "$FILE" ]; then
-            cat "$FILE"
+          if [ -f '$FILE' ]; then
+            cat '$FILE'
           else
             echo '$FILE does not exist.'
           fi
@@ -76,8 +76,8 @@ jobs:
           username: ${{ env.EC2_USER }}
           key: ${{ env.SSH_PRIVATE_KEY }}
           port: 22
-          source: "${{ env.BUILD_FILE }}"
-          target: "~/messaner"
+          source: '${{ env.BUILD_FILE }}'
+          target: '~/messaner'
           overwrite: true
 
       - name: Deploy On EC2 Via SSH
