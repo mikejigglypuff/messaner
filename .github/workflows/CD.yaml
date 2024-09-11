@@ -29,6 +29,7 @@ jobs:
           cd src/main/resources
           sudo echo '${{ secrets.DEV_PROPERTIES }} > application-dev.properties'
           sudo echo '${{ secrets.TEST_PROPERTIES }} > application-test.properties'
+          ls -al
           cd ../../../
 
       - name: Set JDK
