@@ -110,6 +110,5 @@ jobs:
             export MONGO_DBNAME=${{ secrets.MONGODB_DBNAME }}
             nohup java -jar \
               -Dspring.profiles.active=dev \
-              -Dspring.config.location=src/main/resources/application-dev.properties \
               -Dapp.name=messaner \
             ~/messaner/${{ env.BUILD_PATH }} 1> ~/messaner/logs 2>&1 &
