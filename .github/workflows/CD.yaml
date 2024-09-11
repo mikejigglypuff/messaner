@@ -95,7 +95,7 @@ jobs:
               ps -fp $pid
               kill $pid
             else
-              echo "No matching Java process found.
+              echo "No matching Java process found."
             fi
 
       - name: Deploy On EC2 Via SSH
