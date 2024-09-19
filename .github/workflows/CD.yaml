@@ -89,14 +89,7 @@ jobs:
           key: ${{ env.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            pid=$(pgrep -f ${{ env.BUILD_FILE }} | grep -v $$)
-            ps -fp $pid
-            if [ ! -z "$pid" ]; then
-              echo "Stopping existing Java process with PID $pid"
-              kill $pid
-            else
-              echo "No matching Java process found."
-            fi
+            pkill -e -f 'Dapp.name=messaner'
 
       - name: Deploy On EC2 Via SSH
         uses: appleboy/ssh-action@master
