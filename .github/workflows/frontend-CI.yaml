@@ -19,6 +19,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Add Setting Files
+        run: |
+          cd src/main/resources/react-dev
+          echo '${{ secrets.REACT_ENV }}'
+          ls -al
+
       - name: Set NodeJS
         uses: actions/setup-node@v4
         with:
@@ -26,6 +32,5 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd src/main/resources/react-dev
           npm audit fix && npm install && npm run build
           npx eslint .

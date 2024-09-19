@@ -29,9 +29,9 @@ jobs:
         run: |
           cd src/main/resources
           echo '${{ secrets.DEV_PROPERTIES }}' > application-dev.properties
-          sudo echo '${{ secrets.TEST_PROPERTIES }}' > application-test.properties
-          ls -al
-          cd ../../../
+          echo '${{ secrets.TEST_PROPERTIES }}' > application-test.properties && ls -al
+          cd react-dev && echo '${{ secrets.REACT_ENV }}' > .env && ls -al
+          cd ../../../../
 
       - name: Set JDK
         uses: actions/setup-java@v4
@@ -48,8 +48,8 @@ jobs:
       - name: Setup React
         run: |
           cd src/main/resources/react-dev
-          npm audit fix && npm install
-          npm run build && cd ../../../../
+          npm audit fix && npm install && npm run build 
+          cd ../../../../
 
       - name: Setup Gradle
         env:
