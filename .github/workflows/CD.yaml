@@ -89,7 +89,7 @@ jobs:
           key: ${{ env.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            pkill -e -f java | grep -v 'pkill'
+            pgrep -f java | grep -v $$ | xargs -r kill
 
       - name: Deploy On EC2 Via SSH
         uses: appleboy/ssh-action@master
