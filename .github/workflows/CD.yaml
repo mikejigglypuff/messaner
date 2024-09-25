@@ -14,6 +14,7 @@ jobs:
     env:
       BUILD_FILE: 'messaner-0.0.1-SNAPSHOT.jar'
       BUILD_PATH: 'build/libs/messaner-0.0.1-SNAPSHOT.jar'
+      DOCKER_IMG: 'messaner-img'
       EC2_HOST: ${{ secrets.EC2_HOST }}
       EC2_USER: ${{ secrets.EC2_USER }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -22,74 +23,38 @@ jobs:
       - name: Enable debug mode
         run: echo 'ACTIONS_RUNNER_DEBUG=true' >> $GITHUB_ENV
 
+      - name: Set Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Add Setting files
         run: |
+          echo '${{ secrets.DOCKERFILE }}' > Dockerfile
           cd src/main/resources
           echo '${{ secrets.DEV_PROPERTIES }}' > application-dev.properties
           echo '${{ secrets.TEST_PROPERTIES }}' > application-test.properties && ls -al
           cd react-dev && echo '${{ secrets.REACT_ENV }}' > .env && ls -al
           cd ../../../../
 
-      - name: Set JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'oracle'
-          java-version: 21
-          architecture: x64
-
-      - name: Set NodeJS
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Setup React
+      - name: Check Files Before Build Image
         run: |
-          cd src/main/resources/react-dev
-          npm audit fix && npm install && npm run build 
-          cd ../../../../
+          ls -al ./ src/main/resources src/main/resources/react-dev
 
-      - name: Setup Gradle
-        env:
-          MONGO_URI: ${{ secrets.MONGODB_URI }},
-          MONGO_DBNAME: ${{ secrets.MONGODB_DBNAME }}
+      - name: Build Docker Image
+        run: docker build -t ${{ env.DOCKER_IMG }} .
+
+      - name: Push the Docker image to Docker Hub
         run: |
-          chmod +x ./gradlew
-          ./gradlew build --exclude-task test --warning-mode=all --stacktrace 
-          File='file:///home/runner/work/messaner/messaner/build/reports/***s/***/index.html'
-          if [ -f '$FILE' ]; then
-            cat '$FILE'
-          else
-            echo '$FILE does not exist.'
-          fi
-          chmod 755 ${{ env.BUILD_PATH }}
-
-      - name: Check Files Before Transfer
-        run: |
-          ls -al build/libs src/main/resources build/resources/main
-
-      - name: Copy JAR To EC2
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ env.EC2_HOST }}
-          username: ${{ env.EC2_USER }}
-          key: ${{ env.SSH_PRIVATE_KEY }}
-          port: 22
-          source: '${{ env.BUILD_PATH }}'
-          target: '~/messaner'
-          overwrite: true
-
-      - name: Stop App Process
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ env.EC2_HOST }}
-          username: ${{ env.EC2_USER }}
-          key: ${{ env.SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-            pgrep -f java | grep -v $$ | xargs -r kill
+          docker tag ${{ env.DOCKER_IMG }} ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMG }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMG }}
 
       - name: Deploy On EC2 Via SSH
         uses: appleboy/ssh-action@master
@@ -99,9 +64,7 @@ jobs:
           key: ${{ env.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            export MONGO_URI=${{ secrets.MONGODB_URI }}
-            export MONGO_DBNAME=${{ secrets.MONGODB_DBNAME }}
-            nohup java -jar \
-              -Dspring.profiles.active=dev \
-              -Dapp.name=messaner \
-            ~/messaner/${{ env.BUILD_PATH }} 1> ~/messaner/logs 2>&1 &
+            docker pull ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMG }}
+            docker stop ${{ env.DOCKER_IMG }} || true
+            docker rm ${{ env.DOCKER_IMG }} || true
+            docker run -d --name ${{ env.DOCKER_IMG }} -p 80:8080 ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMG }}
