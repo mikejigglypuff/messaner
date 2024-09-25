@@ -32,5 +32,6 @@ jobs:
 
       - name: Install dependencies
         run: |
+          ls -al
           npm audit fix && npm install && npm run build
           npx eslint .
