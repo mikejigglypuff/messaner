@@ -39,6 +39,3 @@ out/
 **/node_modules/
 .env
 /src/main/resources/static/*
-
-### Others ###
-Dockerfile

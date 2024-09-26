@@ -37,7 +37,6 @@ jobs:
 
       - name: Add Setting files
         run: |
-          echo '${{ secrets.DOCKERFILE }}' > Dockerfile
           cd src/main/resources
           echo '${{ secrets.DEV_PROPERTIES }}' > application-dev.properties
           echo '${{ secrets.TEST_PROPERTIES }}' > application-test.properties && ls -al
