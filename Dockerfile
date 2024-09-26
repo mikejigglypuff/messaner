@@ -10,7 +10,6 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --chown=gradle:gradle . .
-RUN apt-get
 RUN gradle build --no-daemon
 RUN ls -al /home/gradle/messaner/src/main/resources/static
 
