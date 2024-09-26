@@ -38,7 +38,7 @@ out/
 .vscode/
 **/node_modules/
 .env
-/src/main/resources/static/
+/src/main/resources/static/*
 
 ### Others ###
 Dockerfile
